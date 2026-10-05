@@ -32,8 +32,9 @@
 #include <rex/logging.h>
 
 REXCVAR_DEFINE_INT32(nfsmw_sombras_cada, 1, "NFSMW",
-                     "Actualizar los mapas de sombras 1 de cada N fotogramas (1 = como el juego)")
-    .range(1, 8);
+                     "Update the shadow maps 1 in N frames (1 = as the game does)")
+    .range(1, 8)
+    .display_name("Update shadows every N frames");
 
 /*
  * One cascade instead of two.
@@ -51,9 +52,10 @@ REXCVAR_DEFINE_INT32(nfsmw_sombras_cada, 1, "NFSMW",
  * must be checked in motion.
  */
 REXCVAR_DEFINE_INT32(nfsmw_sombras_mapas, 2, "NFSMW",
-                     "Mapas de sombras que dibuja el juego en carrera: 2 (como el juego) o 1. Con 1 se "
-                     "ahorra la mitad de los dibujos del pase, pero el segundo mapa se queda congelado")
-    .range(1, 2);
+                     "Shadow maps the game draws during races: 2 (as the game does) or 1. With 1, half of the pass's "
+                     "draws are saved, but the second map stays frozen")
+    .range(1, 2)
+    .display_name("Shadow maps in races");
 
 /*
  * The 30 FPS guard.
@@ -88,14 +90,15 @@ REXCVAR_DEFINE_INT32(nfsmw_sombras_mapas, 2, "NFSMW",
  * anything else, it tells exactly how much was missing.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_guardia_30, true, "NFSMW",
-                    "Si un tramo se mantiene por debajo de 30 FPS, recortar las sombras en el fotograma "
-                    "siguiente hasta volver a 30. Escalones: 1 un solo mapa, 2 sin sombras proyectadas. "
-                    "Ninguno salta fotogramas, asi que no parpadea. Baja de escalon sola cuando sobra "
-                    "margen (30 s) y nunca deshace lo que pongas tu");
+                    "If a stretch stays below 30 FPS, cut back the shadows on the next frame until it is back at 30. "
+                    "Steps: 1 a single map, 2 no cast shadows. Neither skips frames, so nothing flickers. It steps "
+                    "back down by itself when there is spare margin (30 s) and never undoes what you set yourself")
+    .display_name("30 FPS guard");
 REXCVAR_DEFINE_INT32(nfsmw_guardia_30_presupuesto_us, 31000, "NFSMW",
-                     "Techo de fotograma en microsegundos para la guardia. 31000 deja 2,3 ms de margen sobre "
-                     "los 33333 de un fotograma de 30 FPS")
-    .range(16000, 66000);
+                     "Frame time ceiling in microseconds for the guard. 31000 leaves 2.3 ms of margin over the 33333 "
+                     "of a 30 FPS frame")
+    .range(16000, 66000)
+    .display_name("30 FPS guard budget (us)");
 
 /*
  * Distance culling of what goes into the shadow map.
@@ -194,10 +197,11 @@ REXCVAR_DEFINE_INT32(nfsmw_guardia_30_presupuesto_us, 31000, "NFSMW",
  * target type).
  */
 REXCVAR_DEFINE_INT32(nfsmw_sombras_corte, 150, "NFSMW",
-                     "Corte por distancia del mapa de sombras, en porcentaje. 100 = como el juego. 200 = el "
-                     "doble de exigente, o sea la mitad de distancia: los objetos pequenos y lejanos dejan de "
-                     "proyectar sombra. El pase cuesta 0,556 ms reales por cada 10.000 triangulos y son los "
-                     "triangulos el 99 % de su coste, asi que aqui es donde se recorta de verdad");
+                     "Distance cut of the shadow map, as a percentage. 100 = as the game does. 200 = twice as "
+                     "strict, i.e. half the distance: small, distant objects stop casting shadows. The pass costs "
+                     "0.556 ms real per 10,000 triangles and triangles are 99 % of its cost, so this is where it "
+                     "really gets cut")
+    .display_name("Shadow distance cut (%)");
 
 namespace nfsmw::sombras_corte {
 namespace {
@@ -472,12 +476,13 @@ REX_HOOK_RAW(sub_82443B18) {
  * The first time through, the view's H and the actual cutoff distance for each value are logged.
  */
 REXCVAR_DEFINE_INT32(nfsmw_escena_detalle_minimo, 0, "NFSMW",
-                     "Tamano minimo en pixeles para que un objeto se dibuje en la escena que se ve "
-                     "(eView::PixelMinSize de la vista 1; el juego usa 4). 0 = dejar el valor del juego. "
-                     "Subirlo ACERCA la distancia de corte de TODOS los objetos en proporcion inversa "
-                     "(6 = -33 %), asi que se paga en popping; y en GPU casi no da nada, porque lo que "
-                     "quita son objetos de menos de ese tamano en pixeles. Ver la tabla del fichero")
-    .range(0, 64);
+                     "Minimum size in pixels for an object to be drawn in the visible scene (eView::PixelMinSize of "
+                     "view 1; the game uses 4). 0 = keep the game's value. Raising it brings the cull distance of "
+                     "ALL objects CLOSER in inverse proportion (6 = -33 %), so it costs pop-in; and it gives almost "
+                     "nothing on the GPU, because it only removes objects smaller than that many pixels. See the "
+                     "table in the source file")
+    .range(0, 64)
+    .display_name("Scene minimum object size (px)");
 
 namespace nfsmw::escena_detalle {
 namespace {
@@ -580,10 +585,11 @@ REX_HOOK_RAW(sub_8243EC28) {
  * it touches nothing.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_prueba_menu_sombras, false, "NFSMW",
-                    "Pruebas (build 193): anota por que la escena del menu va con o sin pase de sombras y, si solo lo "
-                    "impide el puntero de video 0x82A2D1B4, lo oculta al elegir para que el menu dibuje sus sombras "
-                    "como en la consola con perfil. Solo para reproducir en el PC el parpadeo del menu")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Testing (build 193): logs why the menu scene runs with or without a shadow pass and, if only "
+                    "the video pointer 0x82A2D1B4 prevents it, hides it during the choice so the menu draws its "
+                    "shadows as on the console with a profile. Only to reproduce the menu flicker on PC")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Menu shadow pass trace (test)");
 
 namespace nfsmw::prueba_menu_sombras {
 namespace {

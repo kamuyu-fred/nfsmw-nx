@@ -44,10 +44,11 @@
  * Default 0 = leave it alone, so that nothing changes if the toml does not set it.
  */
 REXCVAR_DEFINE_INT32(nfsmw_switch_nvmap_mb, 0, "NFSMW",
-                     "Switch: MB del area que libnx comparte con nvdrv, donde vive la contabilidad de cada reserva "
-                     "de GPU. libnx usa 8; subirla sube el numero de reservas que caben. 0 = dejar la de libnx")
+                     "Switch: MB of the area libnx shares with nvdrv, where the bookkeeping of each GPU allocation "
+                     "lives. libnx uses 8; raising it raises how many allocations fit. 0 = keep libnx's size")
     .range(0, 256)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("nvmap area size (MB)");
 
 /*
  * What follows was tested and turned out to be wrong. Reverted. Do not try it again.
@@ -98,9 +99,10 @@ REXCVAR_DEFINE_INT32(nfsmw_switch_nvmap_mb, 0, "NFSMW",
  * ----------------------------------------------------------------------------------------------------
  */
 REXCVAR_DEFINE_STRING(nfsmw_mesa_entorno, "", "NFSMW",
-                      "Variables de entorno para Mesa/NVK que se ponen antes de crear Vulkan, como "
-                      "\"VARIABLE=valor;VARIABLE=valor\" (p. ej. MESA_SHADER_CACHE_DISABLE=true); vacio = ninguna")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Environment variables for Mesa/NVK, set before Vulkan is created, as "
+                      "\"VARIABLE=value;VARIABLE=value\" (e.g. MESA_SHADER_CACHE_DISABLE=true); empty = none")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Mesa environment variables");
 
 /*
  * Mesa's on-disk shader cache, turned off.
@@ -111,9 +113,10 @@ REXCVAR_DEFINE_STRING(nfsmw_mesa_entorno, "", "NFSMW",
  * nfsmw_mesa_entorno is applied afterwards: "MESA_SHADER_CACHE_DISABLE=false" there turns it back on.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_mesa_cache_disco, false, "NFSMW",
-                    "Cache de shaders en disco de Mesa (sdmc:/.mesa). Duplica cache/nfsmw_nativo_pipelines.bin; false = ni se "
-                    "crea ni se usa")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Mesa's on-disk shader cache (sdmc:/.mesa). It duplicates cache/nfsmw_nativo_pipelines.bin; "
+                    "false = neither created nor used")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Mesa disk shader cache");
 
 namespace nfsmw::entorno {
 namespace {

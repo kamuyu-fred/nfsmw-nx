@@ -76,10 +76,11 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_material_nativo, true, "NFSMW",
-                    "Parametros de material por dibujo (sub_824511E8 y las escritoras 8244F2E0, 82449360, 82449618, "
-                    "82449988 y 82449C00) en nativo, identico bit a bit. Se comprueba contra la original al empezar y "
-                    "1 de cada 4096 llamadas despues, y se apaga sola si difiere")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Per-draw material parameters (sub_824511E8 and the writers 8244F2E0, 82449360, 82449618, "
+                    "82449988 and 82449C00) in native code, bit-identical. Checked against the original at the start "
+                    "and then 1 in 4096 calls, and turns itself off on any difference")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native material setup");
 
 REX_EXTERN(__imp__sub_824511E8);
 REX_EXTERN(__imp__sub_8244F2E0);

@@ -31,17 +31,20 @@
 
 REXCVAR_DEFINE_BOOL(audio_mute, false, "Audio", "Mute audio output");
 REXCVAR_DEFINE_INT32(audio_sdl_rafaga_tramas, 0, "Audio",
-                     "Diagnostico: el driver SDL saca las tramas del juego de N en N, con N "
-                     "liberaciones seguidas, como el driver de la Switch con buferes de 4 tramas; "
-                     "0 o 1 = una a una, como siempre");
+                     "Diagnostic: the SDL driver takes the game's audio frames N at a time, with N releases in a "
+                     "row, like the Switch driver with 4-frame buffers; 0 or 1 = one at a time, as always")
+    .display_name("SDL audio frame bursts (diag)");
 REXCVAR_DEFINE_BOOL(audio_sdl_bomba, false, "Audio",
-                    "Diagnostico: un hilo pide una trama del juego cada 5,333 ms (como la bomba del "
-                    "driver de la Switch) y SDL deja de liberar el semaforo al consumir");
+                    "Diagnostic: a thread requests an audio frame from the game every 5.333 ms (like the Switch "
+                    "driver's pump) and SDL stops releasing the semaphore on consumption")
+    .display_name("SDL audio pump (diag)");
 REXCVAR_DEFINE_INT32(audio_volcado_salida_s, 0, "Audio",
-                     "Diagnostico: segundos de lo que el driver SDL entrega al dispositivo (con los "
-                     "silencios por falta de tramas) que se guardan en audio_salida.wav; 0 = nada");
+                     "Diagnostic: seconds of what the SDL driver delivers to the device (including silence from "
+                     "missing frames) saved to audio_salida.wav; 0 = none")
+    .display_name("Dump SDL output (diag, s)");
 REXCVAR_DEFINE_INT32(audio_volcado_salida_desde_s, 0, "Audio",
-                     "Diagnostico: segundos de salida SDL que se saltan antes del volcado");
+                     "Diagnostic: seconds of SDL output skipped before dumping")
+    .display_name("SDL output dump start (diag, s)");
 
 namespace rex::audio::sdl {
 

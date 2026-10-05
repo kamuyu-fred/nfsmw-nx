@@ -48,14 +48,15 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_espera_anillo_bloqueante, true, "NFSMW",
-                    "Renderizador nativo: el D3D del juego duerme mientras espera a que el hilo del anillo "
-                    "avance, en vez de dar vueltas en sub_825A5D18")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: the game's D3D sleeps while it waits for the ring thread to advance, instead "
+                    "of spinning in sub_825A5D18")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Blocking ring waits");
 REXCVAR_DEFINE_INT32(nfsmw_espera_anillo_max_us, 2000, "NFSMW",
-                     "Renderizador nativo: espera maxima por vuelta de las esperas del D3D del juego, en "
-                     "microsegundos")
+                     "Native renderer: maximum time per loop of the game's D3D waits, in microseconds")
     .range(100, 100000)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Max ring wait (us)");
 
 namespace nfsmw::nativo {
 namespace {

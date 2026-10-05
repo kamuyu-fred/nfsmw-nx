@@ -99,17 +99,17 @@ changed while playing from the Debug Menu (L + R + Right).
 
 The game's "visual treatment", which players call the "piss filter", gives the city its yellow tint, with some
 desaturation and a dark vignette. To make it softer or turn it off, change `nfsmw_tratamiento_visual` in
-`nfsmw.toml`, or in the Debug Menu (L + R + Right, category **Graficos**) while playing:
+`nfsmw.toml`, or in the Debug Menu (L + R + Right, category **Graphics**, setting **Color filter**) while playing:
 
-- `original` (default): as on the Xbox 360;
-- `suave`: half as strong;
-- `apagado`: no filter. The glow and the fades to black stay the same.
+- Original, `original` in `nfsmw.toml` (default): as on the Xbox 360;
+- Soft, `suave`: half as strong;
+- Off, `apagado`: no filter. The glow and the fades to black stay the same.
 
 It costs nothing.
 
 ## Debug Menu
 
-**It's only available in Spanish for now.** Press **L + R + Right** (D-pad) while playing to open it and again to close it.
+Each setting shows an English name, and hovering it shows a description and the name it has in `nfsmw.toml`. Press **L + R + Right** (D-pad) while playing to open it and again to close it.
 It can be used with the Joy-Con, moving with the D-pad and scrolling with the left stick, or with the touch screen.
 While it is open, the controls go to the menu and not to the game.
 
@@ -123,12 +123,13 @@ While it is open, the controls go to the menu and not to the game.
 
 The categories:
 
-- **Graficos**: internal resolution, frame rate limit (60 or 30), the GPU clock requested in handheld mode, FXAA
+- **Graphics**: internal resolution, frame rate limit (60 or 30), the GPU clock requested in handheld mode, FXAA
   antialiasing, the sky glow, the game's color filter, and the options for the console overlays (SaltyNX) and
   ReverseNX-RT.
-- **Graficos > Posproceso**: color filters for the final image, as presets (`cine`, `sepia`, `noir`, `frio`,
-  `calido`, `vivo`, `matrix`, `crt`) or `personalizado` with your own brightness, contrast, saturation, vibrance,
-  temperature, gamma, vignette and scanlines.
+- **Graphics > Post-processing**: color filters for the final image, as presets (Cinema, Sepia, Noir, Cool, Warm,
+  Vivid, Matrix, CRT) or Custom with your own brightness, contrast, saturation, vibrance, temperature, gamma,
+  vignette and scanlines. In `nfsmw.toml` these keep their original values (`cine`, `sepia`, `noir`, `frio`,
+  `calido`, `vivo`, `matrix`, `crt`, `personalizado`).
 - **NFSMW**: the port's own settings: renderer, shadows, reflections, streaming, audio, the game functions that run as
   native code, and diagnostics. Many of them are described in `nfsmw.toml`; change them only to try something.
 - **The rest** (Audio, GPU, Input, Kernel, Log, UI...) come from the ReXGlue SDK and are mostly for development and
@@ -145,7 +146,7 @@ The resolution is automatic by default (`nfsmw_resolucion_interna = "automatico"
 the resolution, scaled to the screen until you restart it. ReverseNX-RT's Fake Docked and Fake Handheld count as well:
 choose the mode in its overlay and restart the game. The choice is kept until you restart the console.
 
-To use one resolution in both modes, set it in `nfsmw.toml` (or in the Debug Menu, category **Graficos**, then
+To use one resolution in both modes, set it in `nfsmw.toml` (or in the Debug Menu, category **Graphics**, then
 **Save to config**) and restart the game:
 
 - `1280x720`: the resolution of the Xbox 360 version. Docked, it can give a higher frame rate than `1920x1080`, which

@@ -80,14 +80,16 @@
  * is still useful; but the default is 0 = the game decides, which is what retail does.
  */
 REXCVAR_DEFINE_INT32(nfsmw_escenario_detalle, 0, "NFSMW",
-                     "Unidades del mundo que se le adelanta al escenario el cambio a la malla buena. "
-                     "0 = el juego decide (salta a media pantalla). 150 = la malla buena entra 150 "
-                     "unidades antes. -1 = malla buena SIEMPRE mientras el objeto se dibuje")
-    .range(-1, 20000);
+                     "World units by which scenery switches to its full-detail mesh earlier. 0 = the game decides "
+                     "(pops in mid-screen). 150 = the full mesh comes in 150 units sooner. -1 = full mesh ALWAYS "
+                     "while the object is drawn")
+    .range(-1, 20000)
+    .display_name("Scenery detail distance");
 
 REXCVAR_DEFINE_BOOL(nfsmw_escenario_detalle_diag, false, "NFSMW",
-                    "Anota cada 10 s cuantos objetos de escenario entran en la lista, cuantos con "
-                    "malla reducida, y los triangulos que costaria subirlos todos a la buena");
+                    "Logs every 10 s how many scenery objects enter the draw list, how many use a reduced mesh, and "
+                    "the triangles it would cost to raise them all to the full mesh")
+    .display_name("Scenery detail stats (diag)");
 
 namespace nfsmw::escenario_lod {
 namespace {

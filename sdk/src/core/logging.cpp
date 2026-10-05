@@ -102,13 +102,15 @@ REXCVAR_DEFINE_INT32(log_max_files, 20, "Log", "Max number of rotated log files 
  * ================================================================================================
  */
 REXCVAR_DEFINE_BOOL(log_async, false, "Log",
-                    "Escribir el log desde un hilo aparte (el hilo que llama solo encola). Quita los "
-                    "tirones del volcado periodico; false pierde los ultimos mensajes si hay cuelgue")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Write the log from a separate thread (the calling thread only queues). Removes the stutters "
+                    "from periodic flushes; false loses the last messages if the game hangs")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Asynchronous logging");
 
-REXCVAR_DEFINE_INT32(log_async_cola, 8192, "Log", "Mensajes que caben en la cola del log asincrono")
+REXCVAR_DEFINE_INT32(log_async_cola, 8192, "Log", "Number of messages that fit in the asynchronous log queue")
     .range(256, 65536)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Async log queue size");
 
 namespace rex {
 

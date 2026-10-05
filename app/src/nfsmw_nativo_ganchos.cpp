@@ -18,26 +18,29 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_sombra_d3d, false, "NFSMW",
-                    "Renderizador nativo (24/09, fase 1 del renderizador a nivel de Direct3D): en 1 de cada 64 "
-                    "dibujos fotografia el espejo de registros del dispositivo y el anillo lo compara con lo que "
-                    "lee de los paquetes (linea «sombra D3D»). No cambia lo que se dibuja")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (phase 1 of the Direct3D-level renderer): on 1 in 64 draws, snapshots the "
+                    "device's register mirror and the ring compares it with what it reads from the packets ('sombra "
+                    "D3D' line). Does not change what is drawn")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Shadow D3D state check (diag)");
 
 // Phase 2b of the Direct3D-level renderer: see g_dibujo_en_curso and AnotarDibujo below.
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_marcador_registro, true, "NFSMW",
-                    "Renderizador nativo (25/09, fase 2b del renderizador a nivel de Direct3D): el marcador del "
-                    "FlushState de cada Draw* lleva su registro (VS, PS, argumentos) y el anillo lo usa sin la cola "
-                    "ni la busqueda de EmparejarDibujo. Empieza comprobando contra la busqueda y se apaga solo al "
-                    "primer desacuerdo. false = como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (phase 2b of the Direct3D-level renderer): the FlushState marker of each Draw* "
+                    "carries its record (VS, PS, arguments) and the ring uses it without EmparejarDibujo's queue or "
+                    "search. Starts by checking against the search and turns itself off at the first disagreement. "
+                    "false = as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Draw record in FlushState marker");
 
 // Shadow map vegetation filtered on the game thread (see DecidirVegetacion).
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_vegetacion_juego, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): los DrawVertices y DrawIndexedVertices que el anillo "
-                    "tiraria como vegetacion del mapa de sombras (sin color, con prueba de alfa o descarte) se saltan "
-                    "enteros en el hilo del juego: sin FlushState, DRAW_INDX ni registro. Empieza mirando (el anillo "
-                    "comprueba el veredicto de cada dibujo) y se apaga solo al primer desacuerdo. false = como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 184): the DrawVertices and DrawIndexedVertices that the ring would drop "
+                    "as shadow map vegetation (colorless, with alpha test or discard) are skipped entirely on the "
+                    "game thread: no FlushState, DRAW_INDX or record. Starts by watching (the ring checks the "
+                    "verdict for each draw) and turns itself off at the first disagreement. false = as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Skip shadow vegetation on game thread");
 // The settings of the ring's vegetation discard (nfsmw_nativo_dibujos.cpp): the game side checks the
 // same ones.
 REXCVAR_DECLARE(bool, nfsmw_nativo_ps_solo_alfa);

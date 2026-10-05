@@ -24,11 +24,13 @@
 #include <vector>
 
 REXCVAR_DEFINE_INT32(nfsmw_captura_cada_s, 0, "NFSMW",
-                     "Guardar una captura PNG de la imagen del juego cada N segundos en capturas/ "
-                     "junto al ejecutable (0 = nunca; solo para pruebas)")
-    .range(0, 3600);
-REXCVAR_DEFINE_INT32(nfsmw_captura_max, 20, "NFSMW", "Maximo de capturas por ejecucion")
-    .range(1, 1000);
+                     "Save a PNG capture of the game image every N seconds in capturas/ next to the executable (0 = "
+                     "never; for testing only)")
+    .range(0, 3600)
+    .display_name("Screenshot every N seconds");
+REXCVAR_DEFINE_INT32(nfsmw_captura_max, 20, "NFSMW", "Maximum number of captures per run")
+    .range(1, 1000)
+    .display_name("Max screenshots");
 
 namespace nfsmw::captura {
 namespace {

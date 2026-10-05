@@ -173,45 +173,47 @@
 #include <rex/platform.h>
 
 REXCVAR_DEFINE_INT32(nfsmw_sombras_mundo_corte, 0, "NFSMW",
-                     "PROBADA INERTE (compilacion 117, con la C7 delante). La palanca SI escribe -el log dice "
-                     "'PixelMinSize 22 -> 72, los WorldModel dejan de proyectar sombra a 4481 unidades en vez "
-                     "de a 14586'- pero el emisor al que apunta pone 0,21 k triangulos de los 35,1 k del mapa, "
-                     "o sea el 0,6 %. A/B de la vista 13 (116 sin ella / 117 con ella): WorldModel dibujados "
-                     "3,73 -> 5,00 y mundo-resto 0,16 -> 0,21 k triangulos; el mapa entero 31,9 -> 35,1 k y la "
-                     "C6 63,3 -> 67,5 k. No baja: sube, dentro del ruido de dos vueltas distintas. Aunque "
-                     "cortara el 100 % del emisor ahorraria 0,2 k triangulos = 0,01 ms. Se deja en 0 para no "
-                     "perder sombras de fondo a cambio de nada. Distancia en unidades del mundo desde la camara "
-                     "de la luz; 0 = dejar el valor del juego. No toca coches ni escenario")
-    .range(0, 60000);
+                     "TESTED, NO EFFECT (build 117). The setting does write (the log says 'PixelMinSize 22 -> 72, "
+                     "WorldModels stop casting shadows at 4481 units instead of 14586'), but the emitter it targets "
+                     "contributes 0.21 k of the map's 35.1 k triangles, i.e. 0.6 %. Even cutting 100 % of that "
+                     "emitter would save 0.2 k triangles = 0.01 ms. Left at 0 so background shadows are not lost for "
+                     "nothing. Distance in world units from the light camera; 0 = keep the game's value. Does not "
+                     "touch cars or scenery")
+    .range(0, 60000)
+    .display_name("World shadow cut distance (no effect)");
 
 REXCVAR_DEFINE_BOOL(nfsmw_sombras_reparto, true, "NFSMW",
-                    "Anotar cada pocos segundos el reparto REAL del pase de sombras: cuantos dibujos y "
-                    "cuantos triangulos pone cada emisor (mundo con huesos, mundo estatico, escenario y "
-                    "coches) en las vistas 13 y 14, y los diez solidos que mas triangulos meten, por "
-                    "nombre. Es la medida que dice cual de las palancas puede servir. Apagado no cuesta "
-                    "nada: el gancho caliente lee un booleano y llama al original");
+                    "Log every few seconds the REAL breakdown of the shadow pass: how many draws and triangles each "
+                    "emitter adds (skinned world, static world, scenery and cars) in views 13 and 14, and the ten "
+                    "solids that add the most triangles, by name. This is the measurement that tells which of the "
+                    "settings can help. Off it costs nothing: the hot hook reads a boolean and calls the original")
+    .display_name("Shadow pass breakdown (diag)");
 
 REXCVAR_DEFINE_INT32(nfsmw_sombras_reparto_cada_s, 10, "NFSMW",
-                     "Cada cuantos segundos se anota el reparto del pase de sombras")
-    .range(2, 120);
+                     "How many seconds between logs of the shadow pass breakdown")
+    .range(2, 120)
+    .display_name("Shadow breakdown interval (s)");
 
 REXCVAR_DEFINE_INT32(nfsmw_sombras_lod_h, 0, "NFSMW",
-                     "PROBADA INERTE (compilacion 114): escribe la H en el SceneryCullInfo, que solo lee "
-                     "DrawAScenery, o sea solo el escenario, y encima el que llega al mapa de sombras ya "
-                     "esta filtrado por el bit de caster. El log confirmo la escritura (9.146 -> 2.372) y "
-                     "los triangulos pasaron de 64,7 k a 65,5 k. Se deja en 0 para no perder sombras a "
-                     "cambio de nada. En porcentaje de la H de la escena; 0 = no tocar")
-    .range(0, 1200);
+                     "TESTED, NO EFFECT (build 114): writes H into the SceneryCullInfo, which only DrawAScenery "
+                     "reads, i.e. only scenery, and what reaches the shadow map is already filtered by the caster "
+                     "bit. The log confirmed the write (9,146 -> 2,372) and the triangles went from 64.7 k to 65.5 "
+                     "k. Left at 0 so shadows are not lost for nothing. As a percentage of the scene's H; 0 = leave "
+                     "it")
+    .range(0, 1200)
+    .display_name("Shadow scenery LOD height (no effect)");
 
 REXCVAR_DEFINE_BOOL(nfsmw_sombras_lod, false, "NFSMW",
-                    "PROBADA INERTE (compilacion 113): manda el escenario del mapa de sombras a la rama del "
-                    "cubo con el bit 0x1000 del SceneryCullInfo. El log confirmo la mascara "
-                    "(0x00004114 -> 0x00005114) y los triangulos pasaron de 59,1 k a 60,0 k, porque en esa "
-                    "rama el escenario marcado 0x1000100 se queda con la malla buena igual");
+                    "TESTED, NO EFFECT (build 113): sends shadow map scenery to the cube branch with bit 0x1000 of "
+                    "the SceneryCullInfo. The log confirmed the mask (0x00004114 -> 0x00005114) and the triangles "
+                    "went from 59.1 k to 60.0 k, because in that branch scenery marked 0x1000100 keeps its "
+                    "full-detail mesh anyway")
+    .display_name("Shadow scenery LOD (no effect)");
 
 REXCVAR_DEFINE_BOOL(nfsmw_sombras_lod_diag, false, "NFSMW",
-                    "Anota una vez por sesion las mascaras de todos los registros de vista, para comprobar "
-                    "que las vistas 13 y 14 reciben el bit y ninguna otra");
+                    "Logs once per session the masks of all view registers, to check that views 13 and 14 get the "
+                    "bit and no other does")
+    .display_name("View mask check (diag)");
 
 namespace nfsmw::sombras_lod {
 namespace {

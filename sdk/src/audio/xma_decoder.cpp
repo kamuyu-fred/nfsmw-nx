@@ -33,8 +33,9 @@ extern "C" {
 
 REXCVAR_DEFINE_BOOL(ffmpeg_verbose, false, "Audio", "Verbose FFmpeg output (debug and above)");
 REXCVAR_DEFINE_BOOL(audio_ffmpeg_simd, true, "Audio",
-                    "Diagnostico: false = el decodificador XMA de FFmpeg usa solo codigo C, sin "
-                    "NEON ni SSE (para comparar el audio)");
+                    "Diagnostic: false = FFmpeg's XMA decoder uses plain C only, without NEON or SSE (to compare the "
+                    "audio)")
+    .display_name("FFmpeg XMA SIMD");
 REXCVAR_DECLARE(bool, audio_diag_prioridad_critica);  // definida en audio_system.cpp
 /*
  * On by default only on the Switch, like the server priority and the frame wait: there the game's
@@ -51,10 +52,11 @@ REXCVAR_DECLARE(bool, audio_diag_prioridad_critica);  // definida en audio_syste
 #define REX_XMA_EN_TRABAJADOR_POR_DEFECTO 0
 #endif
 REXCVAR_DEFINE_INT32(audio_xma_en_trabajador, REX_XMA_EN_TRABAJADOR_POR_DEFECTO, "Audio",
-                     "Quien descodifica el XMA al llegar un kick (XMAEnableContext): 0 = el hilo que lo pide, "
-                     "como hasta ahora; 1 = el hilo XMA Decoder, que en la Switch va a 0x2B y no lo preempta "
-                     "el anillo de la GPU; 2 = el trabajador, y el hilo que pide el kick solo termina los "
-                     "contextos que el trabajador no haya cogido (para el PC, donde no hay esas prioridades)");
+                     "Who decodes XMA when a kick arrives (XMAEnableContext): 0 = the requesting thread, as before; "
+                     "1 = the XMA Decoder thread, which on Switch runs at 0x2B and is not preempted by the GPU ring; "
+                     "2 = the worker, and the requesting thread only finishes the contexts the worker has not picked "
+                     "up (for PC, which lacks those priorities)")
+    .display_name("XMA decode thread");
 
 // As with normal Microsoft, there are like twelve different ways to access
 // the audio APIs. Early games use XMA*() methods almost exclusively to touch

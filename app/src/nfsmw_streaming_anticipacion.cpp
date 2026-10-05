@@ -118,20 +118,22 @@
  * Both values can be changed from the toml without rebuilding; 100 % is exactly the original game.
  */
 REXCVAR_DEFINE_INT32(nfsmw_streaming_anticipacion, 250, "NFSMW",
-                     "Porcentaje sobre la anticipacion del streamer. 100 = el juego original "
-                     "(1,5 s por delante). 250 = mira 2,5 veces mas lejos. El popping de fachadas "
-                     "y el tiron al entrar en zona nueva salen de aqui")
-    .range(100, 600);
+                     "Percentage applied to the streamer's look-ahead. 100 = the original game (1.5 s ahead). 250 = "
+                     "looks 2.5 times further. Building pop-in and the stutter when entering a new area come from "
+                     "here")
+    .range(100, 600)
+    .display_name("Streaming look-ahead (%)");
 
 REXCVAR_DEFINE_INT32(nfsmw_streaming_techo_m, 160, "NFSMW",
-                     "Metros maximos que se le deja mirar por delante al streamer. 0 = el tope del "
-                     "juego (100 m). Ojo: cada metro de mas son secciones de mas que leer de la SD")
-    .range(0, 400);
+                     "Maximum meters the streamer is allowed to look ahead. 0 = the game's limit (100 m). Careful: "
+                     "every extra meter means extra sections to read from the SD card")
+    .range(0, 400)
+    .display_name("Streaming look-ahead limit (m)");
 
 REXCVAR_DEFINE_BOOL(nfsmw_streaming_diag, true, "NFSMW",
-                    "Llama a la prediccion tambien SIN adelanto para poder comparar zona a zona y "
-                    "para rescatar el resultado si el adelanto se pasa de largo. Cuesta dos "
-                    "llamadas por servicio del streamer (2 por fotograma como mucho)");
+                    "Also calls the prediction WITHOUT look-ahead, to compare area by area and to recover the result "
+                    "if the look-ahead overshoots. Costs two calls per streamer service (at most 2 per frame)")
+    .display_name("Streaming prediction check (diag)");
 
 namespace nfsmw::streaming_anticipacion {
 namespace {

@@ -81,30 +81,35 @@
  * It is applied on each thread's first wait, which is when we know which is which.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_ejecutor_sin_vueltas, true, "NFSMW",
-                    "24/09 (build 169): el Main XThread espera las ordenes del preparador DURMIENDO en pausas cortas "
-                    "en vez de dar vueltas sin parar en sub_82441CC8 (12,6 % de un nucleo en la 162). false = como "
-                    "antes");
+                    "Build 169: the Main XThread waits for the preparer's commands by SLEEPING in short pauses "
+                    "instead of spinning non-stop in sub_82441CC8 (12.6 % of a core in build 162). false = as before")
+    .display_name("Executor sleeps instead of spinning");
 REXCVAR_DEFINE_INT32(nfsmw_ejecutor_pausa_us, 100, "NFSMW",
-                     "Pausa del ejecutor mientras espera ordenes (us). Menos = responde antes y gasta mas CPU");
+                     "Pause of the executor while it waits for commands (us). Lower = responds sooner and uses more "
+                     "CPU")
+    .display_name("Executor pause (us)");
 REXCVAR_DEFINE_INT32(nfsmw_ejecutor_espera_max_us, 2000, "NFSMW",
-                     "Como mucho esto (us) por espera del ejecutor; luego el bucle del juego vuelve a mirar");
+                     "At most this long (us) per executor wait; then the game loop checks again")
+    .display_name("Executor max wait (us)");
 
 REXCVAR_DEFINE_INT32(nfsmw_relevo_prioridad, 0x3A, "NFSMW",
-                     "Switch: prioridad de Horizon de los dos hilos del relevo de fotogramas (el que "
-                     "prepara y el que ejecuta, Main XThread). 0 = no tocar (0x3B, como el resto del "
-                     "juego). 0x3A = un escalon por encima de los demas hilos del juego, para que al "
-                     "despertar no esperen un turno de 10 ms")
+                     "Switch: Horizon priority of the two frame hand-off threads (the preparer and the executor, "
+                     "Main XThread). 0 = leave it (0x3B, like the rest of the game). 0x3A = one step above the other "
+                     "game threads, so they do not wait a 10 ms turn when they wake up")
     .range(0, 0x3B)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Frame hand-off thread priority");
 
 REXCVAR_DEFINE_BOOL(nfsmw_espera_fotograma_bloqueante, true, "NFSMW",
-                    "Relevo de fotogramas entre los dos hilos del juego (bandera 0x82A2CF40): duermen hasta el "
-                    "cambio en vez de llamar a Sleep(0) en bucle")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Frame hand-off between the game's two threads (flag 0x82A2CF40): they sleep until it changes "
+                    "instead of calling Sleep(0) in a loop")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Blocking frame hand-off");
 REXCVAR_DEFINE_INT32(nfsmw_espera_fotograma_max_us, 1000, "NFSMW",
-                     "Espera maxima por vuelta del relevo de fotogramas, en microsegundos")
+                     "Maximum wait per loop of the frame hand-off, in microseconds")
     .range(100, 100000)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Max frame hand-off wait (us)");
 
 namespace {
 

@@ -60,9 +60,10 @@
 #include "nfsmw_audio_nativo.h"
 
 REXCVAR_DEFINE_BOOL(nfsmw_audio_sonda_motor, true, "NFSMW",
-                    "Sonda de medida del sonido del motor (Ginsu): buferes que rellena cada sintetizador, volumenes, "
-                    "rpm y estado de las voces; anota en el log los huecos de mas de 50 ms y los tramos con la "
-                    "aceleracion apagada. Solo mide: no cambia el audio");
+                    "Measurement probe for the car engine sound (Ginsu): buffers filled by each synthesizer, "
+                    "volumes, rpm and voice state; logs gaps over 50 ms and stretches with the throttle off. Only "
+                    "measures: does not change the audio")
+    .display_name("Engine sound probe");
 
 namespace nfsmw::audio_motor_sonda {
 namespace {

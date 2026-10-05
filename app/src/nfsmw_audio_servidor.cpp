@@ -80,32 +80,36 @@
 #include <rex/platform.h>
 
 REXCVAR_DEFINE_BOOL(nfsmw_audio_rescate, true, "NFSMW",
-                    "Mantener en marcha el hilo servidor de audio del juego si la voz de XAudio "
-                    "deja de devolver fines de paquete");
+                    "Keep the game's audio server thread running if the XAudio voice stops returning end-of-packet "
+                    "notifications")
+    .display_name("Audio server rescue");
 REXCVAR_DEFINE_INT32(nfsmw_audio_diag_retraso_servidor_us, 0, "NFSMW",
-                     "Diagnostico: retrasa N microsegundos cada despertar del hilo servidor de "
-                     "audio del juego, para imitar en el PC lo que tarda en volver a correr en la "
-                     "Switch; 0 = nada");
+                     "Diagnostic: delays every wake-up of the game's audio server thread by N microseconds, to "
+                     "imitate on PC how long it takes to run again on the Switch; 0 = none")
+    .display_name("Audio server wake delay (diag, us)");
 REXCVAR_DEFINE_INT32(nfsmw_audio_servidor_prioridad, REX_PLATFORM_SWITCH != 0 ? 0x2D : 0, "NFSMW",
-                     "Prioridad de Horizon del hilo servidor de audio del juego (0x1C-0x3A); 0 = la de los hilos "
-                     "del juego (0x3B). Por defecto 45 (0x2D) en la Switch, para que no espere su turno detras de "
-                     "ellos en los choques; en el PC cualquier valor lo sube a THREAD_PRIORITY_HIGHEST");
+                     "Horizon priority of the game's audio server thread (0x1C-0x3A); 0 = same as the game threads "
+                     "(0x3B). Default 45 (0x2D) on Switch, so it does not wait its turn behind them during crashes; "
+                     "on PC any value raises it to THREAD_PRIORITY_HIGHEST")
+    .display_name("Audio server thread priority");
 REXCVAR_DEFINE_BOOL(nfsmw_audio_diag_anillo, false, "NFSMW",
-                    "Diagnostico: cada 10 s anota cuantos paquetes tenia la voz del servidor de "
-                    "audio en cada pasada, los fines de paquete y las entregas, y la CPU y los nucleos del "
-                    "hilo servidor");
+                    "Diagnostic: every 10 s logs how many packets the audio server voice had on each pass, the "
+                    "end-of-packet notifications and deliveries, and the CPU time and cores of the server thread")
+    .display_name("Audio packet ring (diag)");
 REXCVAR_DEFINE_INT32(nfsmw_audio_diag_anillo_ms, 10000, "NFSMW",
-                     "Diagnostico: milisegundos entre resumenes de nfsmw_audio_diag_anillo (como poco 100); "
-                     "500 separa los choques del atajo del callejon");
+                     "Diagnostic: milliseconds between nfsmw_audio_diag_anillo summaries (at least 100); 500 "
+                     "separates the crashes in the alley shortcut")
+    .display_name("Audio packet ring interval (ms)");
 REXCVAR_DEFINE_DOUBLE(nfsmw_audio_diag_lentitud_mezcla, 0.0, "NFSMW",
-                      "Diagnostico: tras cada mezcla del hilo servidor de audio espera activamente N veces lo que "
-                      "ha tardado, antes de entregar el paquete; 3 imita una mezcla 4 veces mas lenta; 0 = nada");
+                      "Diagnostic: after each mix on the audio server thread, busy-waits N times as long as the mix "
+                      "took before delivering the packet; 3 imitates a mix 4 times slower; 0 = none")
+    .display_name("Audio mix slowdown (diag)");
 REXCVAR_DEFINE_INT32(nfsmw_audio_esperar_servidor_ms, REX_PLATFORM_SWITCH != 0 ? 30 : 0, "NFSMW",
-                     "Antes de cada trama, si la voz del servidor de audio del juego no tiene paquete y el "
-                     "servidor esta en marcha, esperar como mucho N ms a que lo entregue (en vez de mezclar la "
-                     "trama con esa voz en silencio); 0 = no esperar (por defecto 30 en la Switch y 0 en el PC). "
-                     "Necesita colchon en el driver (audio_switch_tramas_en_cola en la Switch, "
-                     "audio_sdl_bomba_cola en el PC)");
+                     "Before each audio frame, if the game's audio server voice has no packet and the server is "
+                     "running, wait up to N ms for it (instead of mixing that frame with the voice silent); 0 = do "
+                     "not wait (default 30 on Switch and 0 on PC). Needs buffering in the driver "
+                     "(audio_switch_tramas_en_cola on Switch, audio_sdl_bomba_cola on PC)")
+    .display_name("Wait for audio server (ms)");
 
 namespace nfsmw::hilos {
 // nfsmw_hilos_switch.cpp

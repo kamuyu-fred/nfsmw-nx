@@ -59,19 +59,22 @@ extern "C" void RexSwitchPerfTiron(uint64_t inicio, uint64_t fin);
 #include <vector>
 
 REXCVAR_DEFINE_INT32(nfsmw_nativo_resolver_sin_copia_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 154): con N > 0 alterna copiar e intercambiar cada N "
-                     "segundos, para comparar capturas del mismo sitio con el juego en pausa");
+                     "Native renderer (test, build 154): with N > 0, alternates between copying and swapping every N "
+                     "seconds, to compare captures of the same spot with the game paused")
+    .display_name("Alternate copy/swap (test, s)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_sombras_escala, 100, "NFSMW",
-                     "Renderizador nativo (19/09, build 201): dibuja los dos mapas de sombras de 1600x1600 "
-                     "del juego a este porcentaje y los sube de tamano al resolverlos. 100 = como la Xbox 360 "
-                     "(1600, que son 2000 de sus 2048 baldosas de EDRAM); 64 = como la version de PC de este "
-                     "mismo juego (1024). El valor se toma al crear el primer mapa y no cambia en marcha")
-    .range(50, 100);
+                     "Native renderer (build 201): draws the game's two 1600x1600 shadow maps at this percentage and "
+                     "scales them up when resolving. 100 = as on the Xbox 360 (1600, i.e. 2000 of its 2048 EDRAM "
+                     "tiles); 64 = as in the PC version of this game (1024). Read when the first map is created; "
+                     "does not change while running")
+    .range(50, 100)
+    .display_name("Shadow map scale (%)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_resolver_sin_copia, true, "NFSMW",
-                    "Renderizador nativo (17/09, build 154; por defecto desde la 161, medido en consola: -2,36 ms "
-                    "de los 7,41 de copias): al resolver un destino entero a una textura del mismo "
-                    "tamano y formato, intercambia las imagenes en vez de copiar los pixeles. La imagen no cambia; si "
-                    "el juego vuelve a dibujar en ese destino sin borrarlo antes, se restaura la copia");
+                    "Native renderer (build 154; default since 161, measured on console: -2.36 ms of the 7.41 ms of "
+                    "copies): when resolving a whole target to a texture of the same size and format, swaps the "
+                    "images instead of copying the pixels. The image does not change; if the game draws to that "
+                    "target again without clearing it first, the copy is restored")
+    .display_name("Resolve by swapping");
 /*
  * Swap also when the command does not clear the render target.
  *
@@ -116,16 +119,18 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_resolver_sin_copia, true, "NFSMW",
  * would see the previous frame's content. It is added here.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_intercambiar_color, false, "NFSMW",
-                    "Renderizador nativo (20/09): al resolver el destino de color entero a una textura del "
-                    "mismo tamano, intercambiar las imagenes en vez de copiar 1280x720 pixeles. Son 4 copias "
-                    "por fotograma, el 78 % del trafico de copias. La imagen no cambia; si el juego dibuja "
-                    "encima sin borrar, se restaura");
+                    "Native renderer: when resolving the whole color target to a texture of the same size, swap the "
+                    "images instead of copying 1280x720 pixels. That is 4 copies per frame, 78 % of the copy "
+                    "traffic. The image does not change; if the game draws over it without clearing, the copy is "
+                    "restored")
+    .display_name("Swap color target on resolve");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_intercambiar_sin_borrado, true, "NFSMW",
-                    "Renderizador nativo (20/09): intercambiar la imagen tambien cuando la orden de resolve no "
-                    "borra el destino. Se lleva por delante la copia de 1600x1600 del segundo mapa de sombras "
-                    "(2,4 ms reales). Si el juego dibuja encima sin borrar, se restaura: peor caso, lo mismo "
-                    "que ahora. Vigila 'restauraciones' en el log: tiene que quedarse en 0");
+                    "Native renderer: swap the image also when the resolve command does not clear the target. This "
+                    "removes the 1600x1600 copy of the second shadow map (2.4 ms real). If the game draws over it "
+                    "without clearing, it is restored: worst case, the same as now. Watch 'restauraciones' in the "
+                    "log: it must stay at 0")
+    .display_name("Swap on resolve without clear");
 /*
  * The flickering shadows of the main menu. This was the cause.
  *
@@ -153,9 +158,10 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_intercambiar_sin_borrado, true, "NFSMW",
  * resolver" figure. false = previous behavior.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_resolver_contenido_valido, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 193): antes de resolver un destino de profundidad cuyo contenido "
-                    "se fue en un intercambio, traerlo de vuelta. Arregla el parpadeo de las sombras del menu (el "
-                    "escenario muestreaba el mapa del fotograma anterior). false = como la 192");
+                    "Native renderer (build 193): before resolving a depth target whose contents went away in a "
+                    "swap, bring them back. Fixes the flickering menu shadows (the scenery sampled the previous "
+                    "frame's map). false = as in build 192")
+    .display_name("Restore depth before resolve");
 /*
  * The verdict on intercambiar_sin_borrado, with numbers measured on the console.
  *
@@ -178,10 +184,11 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_resolver_contenido_valido, true, "NFSMW",
  * has to go is the restore, which is what the two settings below are for.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_restaurar_area_util, true, "NFSMW",
-                    "Renderizador nativo (20/09 noche): al traer de vuelta el contenido de un destino "
-                    "intercambiado, copiar solo las filas que el juego resuelve de verdad en vez de la imagen "
-                    "entera. Los destinos se crean con alto = max(720, pitch) (la escena es 1280x1280 para "
-                    "dibujar 1280x720), y lo de debajo del area util no se dibuja ni se lee nunca");
+                    "Native renderer: when bringing back the contents of a swapped target, copy only the rows the "
+                    "game really resolves instead of the whole image. Targets are created with height = max(720, "
+                    "pitch) (the scene is 1280x1280 to draw 1280x720), and what lies below the used area is never "
+                    "drawn or read")
+    .display_name("Restore only the used area");
 /*
  * Restore without copying a single pixel.
  *
@@ -244,10 +251,11 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_restaurar_area_util, true, "NFSMW",
  * saving was fake. With false, "prestadas leidas" and "por intercambio" must stay at 0.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_restaurar_por_intercambio, false, "NFSMW",
-                    "Renderizador nativo (20/09 noche; APAGADO el 25/09): traer de vuelta el contenido de "
-                    "un destino intercambiado volviendo a intercambiar las imagenes en vez de copiarlas. NO "
-                    "ENCENDER: deja prestada la textura[1] del mapa de sombras, la que muestrea el coche, y "
-                    "el coche deja de recibir sombras. Vigila 'prestadas leidas' en el log: tiene que ser 0");
+                    "Native renderer (turned OFF): bring back the contents of a swapped target by swapping the "
+                    "images again instead of copying them. DO NOT TURN ON: it leaves the shadow map's texture[1], "
+                    "the one the car samples, on loan, and the car stops receiving shadows. Watch 'prestadas leidas' "
+                    "in the log: it must be 0")
+    .display_name("Restore by swapping (do not use)");
 /*
  * Depth that nobody samples is not copied (nfsmw_nativo_profundidad_perezosa).
  *
@@ -279,9 +287,10 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_restaurar_por_intercambio, false, "NFSMW",
 // The first version saved nothing (the copy was recorded if the source was rewritten in the same frame, which
 // is always the case); with the current AntesDeEscribirProfundidad rule it is dropped. On again.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_profundidad_perezosa, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): la profundidad que el juego resuelve para la composicion "
-                    "final solo se copia si un dibujo la muestrea de verdad (sin el desenfoque, ninguno). La imagen no "
-                    "cambia; ~0,35 ms de GPU por fotograma. Se comprueba sola. false = copiar siempre, como antes");
+                    "Native renderer (build 184): the depth the game resolves for the final composite is only copied "
+                    "if a draw really samples it (without the blur, none does). Same image; ~0.35 ms of GPU per "
+                    "frame. Checks itself. false = always copy, as before")
+    .display_name("Lazy depth copy");
 /*
  * The front buffer is drawn from its render target, without copying it (nfsmw_nativo_frontal_perezoso).
  *
@@ -311,9 +320,10 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_profundidad_perezosa, true, "NFSMW",
  * line: "C2 frontal perezoso". false = always copy, as before.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_frontal_perezoso, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): el Swap pinta el frontal desde su destino de render (o una "
-                    "imagen retenida) en vez de copiarlo antes a la textura: 0,59 Mpixeles menos por fotograma. Misma "
-                    "imagen; con FXAA se copia como siempre. Se comprueba sola. false = copiar siempre, como antes");
+                    "Native renderer (build 184): Swap draws the front buffer from its render target (or a retained "
+                    "image) instead of copying it to the texture first: 0.59 Mpixels less per frame. Same image; "
+                    "with FXAA it is copied as always. Checks itself. false = always copy, as before")
+    .display_name("Lazy front buffer copy");
 /*
  * The shadow map without the 1600x1600 copy (nfsmw_nativo_sombra_minimo).
  *
@@ -351,14 +361,16 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_frontal_perezoso, true, "NFSMW",
  * Report line: "C2 sombra por minimo". false = always copy, as before.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_sombra_minimo, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): el mapa de sombras del mundo ya no se restaura copiando "
-                    "1600x1600; los coches se dibujan sobre el destino borrado y el mundo muestrea el minimo de las dos "
-                    "texturas. Misma imagen. Necesita la biblioteca con tfetch2DSombraMin. Se comprueba sola. false = "
-                    "copiar como antes");
+                    "Native renderer (build 184): the world shadow map is no longer restored by copying 1600x1600; "
+                    "the cars are drawn over the cleared target and the world samples the minimum of the two "
+                    "textures. Same image. Needs the shader library with tfetch2DSombraMin. Checks itself. false = "
+                    "copy as before")
+    .display_name("Shadow map minimum instead of copy");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_sombra_minimo_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (25/09, build 184, prueba): con N > 0 y la guardia ya aplicando, alterna cada N "
-                     "segundos el minimo (tramos pares) y la copia de siempre (impares), para medir la ganancia neta en la "
-                     "consola con 'C2: GPU por Swap'. 0 = sin alternar");
+                     "Native renderer (build 184, test): with N > 0 and the guard already applying, alternates every "
+                     "N seconds between the minimum (even stretches) and the usual copy (odd stretches), to measure "
+                     "the net gain on the console with 'C2: GPU por Swap'. 0 = no alternation")
+    .display_name("Alternate shadow minimum (test, s)");
 /*
  * Repeated clears.
  *
@@ -373,9 +385,10 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_sombra_minimo_alternar_s, 0, "NFSMW",
  * restore. With that it is impossible to skip a clear that is needed.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_saltar_borrados_repetidos, true, "NFSMW",
-                    "Renderizador nativo (20/09 noche): saltarse un borrado cuando el destino ya esta borrado "
-                    "con ese mismo valor y no se ha dibujado nada desde entonces. No cambia ni un pixel; "
-                    "'borrados saltados' en el informe C2 dice cuantos se ahorran");
+                    "Native renderer: skip a clear when the target is already cleared to that same value and nothing "
+                    "has been drawn since. Not a single pixel changes; 'borrados saltados' in the C2 report says how "
+                    "many are saved")
+    .display_name("Skip repeated clears");
 /*
  * How much of each clear is used (nfsmw_nativo_diag_borrados).
  *
@@ -389,9 +402,10 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_saltar_borrados_repetidos, true, "NFSMW",
 // false by default. Measured: the clip to the useful area that needs it only saved 0.09 ms of GPU, and the
 // tracking runs on the PM4 ring thread, which is now the bottleneck.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_borrados, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184, diagnostico): por destino, area borrada frente a la que se "
-                    "usa hasta el borrado siguiente (pases, resolves, restauraciones e intercambios). Una linea cada "
-                    "20 s ('C2 borrados por destino'). No cambia la imagen");
+                    "Native renderer (build 184, diagnostic): per target, cleared area versus the area used until "
+                    "the next clear (passes, resolves, restores and swaps). One line every 20 s ('C2 borrados por "
+                    "destino'). Does not change the image")
+    .display_name("Clear area stats (diag)");
 /*
  * Color clears only over the area in use (nfsmw_nativo_borrar_area_util).
  *
@@ -411,25 +425,28 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_borrados, false, "NFSMW",
 // false by default. Measured: 0.09 ms of GPU per frame (1.18 Mpixels not cleared): not worth it with the
 // PM4 ring as the bottleneck.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_borrar_area_util, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): los borrados de color borran solo las filas que se usan de "
-                    "verdad; el resto se borra antes de que algo lo use. Misma imagen. Necesita "
-                    "nfsmw_nativo_diag_borrados. false = la imagen entera, como antes");
+                    "Native renderer (build 184): color clears only clear the rows really used; the rest is cleared "
+                    "before anything uses it. Same image. Needs nfsmw_nativo_diag_borrados. false = the whole image, "
+                    "as before")
+    .display_name("Clear only the used area");
 // Defined in nfsmw_nativo_dibujos.cpp; here it is only read so as not to open two queries of the same type
 // at once.
 REXCVAR_DECLARE(int32_t, nfsmw_nativo_estadisticas_por_dibujo_s);
 // nfsmw_nativo_sombra_minimo only pays off with the single-sample PCF (defined in nfsmw_nativo_dibujos.cpp).
 REXCVAR_DECLARE(bool, nfsmw_nativo_pcf_barato);
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_estadisticas_pipeline, false, "NFSMW",
-                    "Renderizador nativo (17/09, build 156): cuenta fragmentos sombreados, invocaciones de "
-                    "vertice y primitivas recortadas por tipo de pasada (informe C2). La imagen no cambia, "
-                    "pero las consultas cuestan tiempo de GPU: solo para medir");
+                    "Native renderer (build 156): counts shaded fragments, vertex invocations and clipped primitives "
+                    "per pass type (C2 report). The image does not change, but the queries cost GPU time: for "
+                    "measuring only")
+    .display_name("Pipeline statistics (diag)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_borrado, false, "NFSMW",
-                    "Renderizador nativo: borrar cada destino de render con un color propio en "
-                    "vez del color del juego (solo pruebas: comprueba copia, borrado y "
-                    "presentacion)");
+                    "Native renderer: clear each render target with its own color instead of the game's (testing "
+                    "only: checks copy, clear and presentation)")
+    .display_name("Debug clear colors (test)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_resueltas, false, "NFSMW",
-                    "Renderizador nativo: presentar en mosaico las texturas resueltas de cada "
-                    "fotograma, en el orden de sus copias (solo pruebas)");
+                    "Native renderer: present the textures resolved in each frame as tiles, in the order of their "
+                    "copies (testing only)")
+    .display_name("Show resolved textures (test)");
 /*
  * Who reads each resolved texture (nfsmw_nativo_diag_lectores_s, measurement only).
  *
@@ -461,11 +478,12 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_resueltas, false, "NFSMW",
  */
 // 0 by default. Measured: its watching only served the lazy composite copy, which saves nothing.
 REXCVAR_DEFINE_INT32(nfsmw_nativo_diag_lectores_s, 0, "NFSMW",
-                     "Renderizador nativo (25/09, build 184): cada estos segundos se miran dos fotogramas enteros y se "
-                     "escribe, por textura resuelta, que pixel shaders leen cada escritura antes de la siguiente "
-                     "(lineas C2 lectores); lo que sale como SOBRA se vigila despues en todos los fotogramas. Solo "
-                     "mide. 0 = apagado")
-    .range(0, 3600);
+                     "Native renderer (build 184): every N seconds, two whole frames are inspected and, per resolved "
+                     "texture, it logs which pixel shaders read each write before the next one ('C2 lectores' "
+                     "lines); anything reported as unused (SOBRA) is then watched on every frame. Only measures. 0 = "
+                     "off")
+    .range(0, 3600)
+    .display_name("Resolve reader survey (diag, s)");
 /*
  * The composited scene is only copied if someone reads it (nfsmw_nativo_compuesta_perezosa).
  * The scene texture (098B0000 at 1024x576) is written twice per frame: the blit of the scene and, after the
@@ -483,18 +501,21 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_diag_lectores_s, 0, "NFSMW",
 // false by default. Measured: 19,895 of 21,041 copies were recorded anyway because a draw reads it almost
 // every frame: 0 ms saved.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_compuesta_perezosa, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): la copia 1 a 1 de la escena compuesta a su textura "
-                    "(098B0000, antes del HUD) se aplaza: se graba si un dibujo la muestrea antes de volver a escribir "
-                    "su origen (las gotas de lluvia) y se tira si no. Se activa tras la vigilancia de "
-                    "nfsmw_nativo_diag_lectores_s y se apaga sola al primer desacuerdo. false = se copia siempre");
+                    "Native renderer (build 184): the 1:1 copy of the composite scene to its texture (098B0000, "
+                    "before the HUD) is deferred: it is recorded if a draw samples it before its source is written "
+                    "again (the rain drops) and dropped otherwise. Enabled after the nfsmw_nativo_diag_lectores_s "
+                    "survey and turns itself off at the first disagreement. false = always copied")
+    .display_name("Lazy composite copy");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_leer_resueltas_texels, 4096, "NFSMW",
-                     "Renderizador nativo: las texturas resueltas de hasta estos texels se copian "
-                     "tambien a la memoria del invitado, que el juego lee para su exposicion (0 = "
-                     "ninguna; 4096 = 64x64, las que usa la exposicion; 57600 = 320x180)");
+                     "Native renderer: resolved textures of up to this many texels are also copied to guest memory, "
+                     "which the game reads for its exposure (0 = none; 4096 = 64x64, the ones the exposure uses; "
+                     "57600 = 320x180)")
+    .display_name("Read back small resolves (texels)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_invalidar_texturas_cada_copia, false, "NFSMW",
-                    "Renderizador nativo: tirar las caches de texturas en cada copia (lo de antes de la build 127). "
-                    "Desde la 127 solo se tiran cuando una textura resuelta se crea, se rehace, se prepara o cambia "
-                    "su orden de canales");
+                    "Native renderer: drop the texture caches on every copy (the behavior before build 127). Since "
+                    "127 they are only dropped when a resolved texture is created, rebuilt, prepared or changes its "
+                    "channel order")
+    .display_name("Flush texture caches on every copy");
 /*
  * On by default. It was written earlier and left off without being measured.
  *
@@ -566,10 +587,11 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_invalidar_texturas_cada_copia, false, "NFSMW",
  * three frames ahead. It costs 64 MB of upload buffer, out of the ~900 MB free in the heap.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_ranuras_trabajo, 3, "NFSMW",
-                     "Renderizador nativo: ranuras de trabajo (2 a 4). Con mas, la CPU va mas fotogramas por "
-                     "delante de la GPU y se para menos; cada una cuesta 64 MB. 2 = como la compilacion 80")
+                     "Native renderer: work slots (2 to 4). With more, the CPU runs more frames ahead of the GPU and "
+                     "stalls less; each costs 64 MB. 2 = as in build 80")
     .range(2, 4)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Frames in flight");
 
 // ZCULL (hierarchical depth culling), switchable.
 //
@@ -585,13 +607,15 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_ranuras_trabajo, 3, "NFSMW",
  * enabled by hand in the test toml; the default value was misleading.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_zcull, true, "NFSMW",
-                    "Descarte jerarquico de profundidad (ZCULL): quita TRANSFER_DST a las "
-                    "profundidades del juego para que el driver les de plano de ZCULL");
+                    "Hierarchical depth culling (ZCULL): removes TRANSFER_DST from the game's depth buffers so the "
+                    "driver gives them a ZCULL plane")
+    .display_name("ZCULL");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_salida_sin_espera, true, "NFSMW",
-                    "Renderizador nativo: pinta la salida de cada Swap rotando 3 ranuras en vez de una, para no "
-                    "esperar a que la GPU termine la salida anterior (en la consola el anillo esperaba ahi 17 ms "
-                    "por Swap, casi un vsync). No cambia la imagen; false vuelve al comportamiento de antes");
+                    "Native renderer: draws each Swap's output rotating 3 slots instead of one, so it does not wait "
+                    "for the GPU to finish the previous output (on the console the ring waited there 17 ms per Swap, "
+                    "almost a vsync). Does not change the image; false returns to the old behavior")
+    .display_name("Non-blocking output");
 // In NVK, TOP_OF_PIPE is PIPELINE_LOCATION_NONE: the timestamp is released when the GPU reads the command,
 // not when the previous work finishes, and the per-category breakdown is approximate (a copy gets charged
 // with the draw of the previous pass). BOTTOM_OF_PIPE is PIPELINE_LOCATION_ALL: it is released when all
@@ -602,22 +626,25 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_salida_sin_espera, true, "NFSMW",
  * of them worth 2 ms and dead for several builds.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_marcas_precisas, true, "NFSMW",
-                    "Renderizador nativo (medida): marcas de tiempo de GPU entre categorias con BOTTOM_OF_PIPE (se "
-                    "sueltan al terminar lo anterior) en vez de TOP_OF_PIPE (al leer el comando): reparto por "
-                    "categorias exacto. No cambia la imagen");
+                    "Native renderer (measurement): GPU timestamps between categories with BOTTOM_OF_PIPE (written "
+                    "when the previous work finishes) instead of TOP_OF_PIPE (when the command is read): exact split "
+                    "by category. Does not change the image")
+    .display_name("Precise GPU timestamps");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_marcas_precisas_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (medida): con N > 0 alterna marcas normales (tramos pares) y precisas "
-                     "(tramos impares) cada N segundos y anota cada cambio, para comparar en la misma ejecucion");
+                     "Native renderer (measurement): with N > 0 alternates normal (even stretches) and precise (odd "
+                     "stretches) timestamps every N seconds and logs each change, to compare within the same run")
+    .display_name("Alternate timestamp mode (test, s)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_lecturas_cada, 1, "NFSMW",
-                     "Renderizador nativo: de cada destino se lee y escribe en la memoria del invitado "
-                     "una de cada N copias pequenas (1 = todas); el juego las usa para su exposicion");
+                     "Native renderer: of each target, one in N small copies is read and written to guest memory (1 "
+                     "= all); the game uses them for its exposure")
+    .display_name("Read back 1 in N small copies");
 // The Xbox 360 passes the image through the gamma ramp the game loads, and NFSMW does not load the identity
 // (measured: [64] = 273 and [128] = 539 in 10 bits, instead of 256 and 513).
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_rampa_gamma, true, "NFSMW",
-                    "Renderizador nativo: aplica en la salida la rampa de gamma que carga el juego, como la pantalla "
-                    "de la Xbox 360 (sin ella, los medios tonos y las sombras salen mas oscuros). false: la imagen tal "
-                    "cual, como antes de la build 137")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: apply on output the gamma ramp the game loads, like the Xbox 360 display does "
+                    "(without it, midtones and shadows come out darker). false: the image as is, as before build 137")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Game gamma ramp");
 
 // The 30 FPS guard (nfsmw_guardia_30) lives in nfsmw_recorte_sombras.cpp, which owns the lever it pulls.
 namespace nfsmw::guardia30 {

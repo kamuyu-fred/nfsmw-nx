@@ -26,12 +26,13 @@
 #include <vector>
 
 REXCVAR_DEFINE_STRING(nfsmw_prueba_botones, "", "NFSMW",
-                      "Pruebas: guion de botones de un mando virtual, en segundos desde el "
-                      "arranque. \"92:start,98:a,130-160:rt\" pulsa START a los 92 s, A a los 98 s y "
-                      "mantiene el gatillo derecho de 130 a 160 s. Botones: a b x y start back arriba "
-                      "abajo izquierda derecha lb rb lt rt, y de la palanca izquierda "
-                      "palanca_arriba palanca_abajo palanca_izquierda palanca_derecha")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: button script for a virtual pad, in seconds since startup. "
+                      "\"92:start,98:a,130-160:rt\" presses START at 92 s, A at 98 s and holds the right trigger "
+                      "from 130 to 160 s. Buttons: a b x y start back arriba abajo izquierda derecha (up down left "
+                      "right) lb rb lt rt, and for the left stick palanca_arriba palanca_abajo palanca_izquierda "
+                      "palanca_derecha")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Test button script");
 
 // Race tests: the car has to move forward following the track without leaving it. The button script only
 // holds the trigger, and the car ended up against a wall. The game has a script command "ForceAIControl"
@@ -40,28 +41,32 @@ REXCVAR_DEFINE_STRING(nfsmw_prueba_botones, "", "NFSMW",
 // enables AI control (virtual function +16 with 1). It is what the game does when crossing the finish line:
 // the AI drives the player's car along the racing line.
 REXCVAR_DEFINE_BOOL(nfsmw_prueba_ia_conduce, false, "NFSMW",
-                    "Pruebas: en cada carrera la IA del juego conduce el coche del jugador desde el principio "
-                    "(comando ForceAIControl), para que avance siguiendo el circuito")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Testing: in every race the game's AI drives the player's car from the start (ForceAIControl "
+                    "command), so it advances along the track")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("AI drives the player car (test)");
 // Enabled after the countdown: when it was enabled 30 frames after entering the race (during the intro, with
 // the script's A presses already inside the race), the car ended up flipped and off the track.
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_ia_conduce_retraso_s, 12.0, "NFSMW",
-                      "Pruebas: segundos desde que empieza la carrera (estado 6) hasta que la IA toma el coche "
-                      "del jugador (nfsmw_prueba_ia_conduce)")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: seconds from the start of the race (state 6) until the AI takes the player's car "
+                      "(nfsmw_prueba_ia_conduce)")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("AI takeover delay (test, s)");
 
 // Alley shortcut in Ironwood Estates: the robotic-audio tests have to go through it, and the game's AI does
 // not take it. The command registered right before ForceAIControl (handler sub_823671C0) does the opposite:
 // with r3 = 0 it takes player 1, looks up its AI interface and, if the AI is driving, calls virtual function
 // +16 with 0 and gives the car back to the player.
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_ia_suelta_s, 0.0, "NFSMW",
-                      "Pruebas: segundos desde que empieza la carrera (estado 6) hasta que se le quita el coche a la "
-                      "IA (nfsmw_prueba_ia_conduce); 0 = nunca")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: seconds from the start of the race (state 6) until the car is taken back from the AI "
+                      "(nfsmw_prueba_ia_conduce); 0 = never")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("AI release time (test, s)");
 REXCVAR_DEFINE_STRING(nfsmw_prueba_tras_soltar, "", "NFSMW",
-                      "Pruebas: botones del mando virtual desde que se suelta la IA, en segundos contados desde ese "
-                      "momento, con el formato de nfsmw_prueba_botones (\"0-15:rt\" acelera 15 s)")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: virtual pad buttons after the AI lets go, in seconds counted from that moment, in "
+                      "the nfsmw_prueba_botones format (\"0-15:rt\" accelerates for 15 s)")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Test buttons after AI release");
 
 // Player car position: the AI does not repeat the race identically (in one run it passed the checkpoint at
 // 41.5 s and in another at 53 s, with traffic in between), so releasing it at a fixed time does not bring
@@ -69,10 +74,10 @@ REXCVAR_DEFINE_STRING(nfsmw_prueba_tras_soltar, "", "NFSMW",
 // player 1's car (the same ones ForceAIControl uses) and what they point to, to find the position and
 // speed offline.
 REXCVAR_DEFINE_STRING(nfsmw_prueba_volcar_coche, "", "NFSMW",
-                      "Pruebas: segundos desde que empieza la carrera (estado 6) en los que se vuelca la memoria del "
-                      "coche del jugador a logs/coche_N.bin, separados por comas (\"30,30.25,30.5,31\"); vacio = "
-                      "nunca")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: seconds from the start of the race (state 6) at which the player car's memory is "
+                      "dumped to logs/coche_N.bin, comma-separated (\"30,30.25,30.5,31\"); empty = never")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Dump player car memory (test)");
 
 // Alley shortcut autopilot: on the home straight the car is taken from the AI and the left stick drives it
 // along a route of points (world meters, taken from the trace) with the throttle floored. After the last
@@ -81,33 +86,41 @@ REXCVAR_DEFINE_STRING(nfsmw_prueba_volcar_coche, "", "NFSMW",
 // 225 m from the home straight: with a single straight segment the autopilot dragged the car along the
 // right-hand wall.
 REXCVAR_DEFINE_BOOL(nfsmw_prueba_traza_coche, false, "NFSMW",
-                    "Pruebas: guarda en logs/traza_coche.csv la posicion, la velocidad y el rumbo del coche del "
-                    "jugador en cada fotograma de carrera")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Testing: saves the player car's position, speed and heading on every race frame to "
+                    "logs/traza_coche.csv")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Trace player car (test)");
 REXCVAR_DEFINE_STRING(nfsmw_prueba_piloto, "", "NFSMW",
-                      "Pruebas: ruta \"x1,y1,x2,y2[,x3,y3...]\" (metros del mundo) por la que el piloto lleva el "
-                      "coche del jugador cuando pasa a menos de nfsmw_prueba_piloto_radio del primer punto; vacio = "
-                      "sin piloto")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: route \"x1,y1,x2,y2[,x3,y3...]\" (world meters) along which the autopilot drives the "
+                      "player's car when it comes within nfsmw_prueba_piloto_radio of the first point; empty = no "
+                      "autopilot")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Test autopilot route");
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_piloto_radio, 20.0, "NFSMW",
-                      "Pruebas: distancia a A (m) a la que el piloto le quita el coche a la IA")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: distance to point A (m) at which the autopilot takes the car from the AI")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Autopilot takeover radius (m)");
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_piloto_adelanto, 25.0, "NFSMW",
-                      "Pruebas: metros por delante, sobre la linea, a los que apunta el piloto")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: meters ahead along the line that the autopilot aims at")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Autopilot look-ahead (m)");
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_piloto_angulo, 25.0, "NFSMW",
-                      "Pruebas: grados de error de rumbo con los que el piloto gira el stick del todo")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: degrees of heading error at which the autopilot turns the stick all the way")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Autopilot full-lock angle (deg)");
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_piloto_signo, 1.0, "NFSMW",
-                      "Pruebas: 1 o -1, sentido del stick del piloto")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: 1 or -1, direction of the autopilot's stick")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Autopilot steering sign");
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_piloto_max_s, 12.0, "NFSMW",
-                      "Pruebas: segundos como mucho que conduce el piloto antes de devolverle el coche a la IA")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: maximum seconds the autopilot drives before handing the car back to the AI")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Autopilot max time (s)");
 REXCVAR_DEFINE_DOUBLE(nfsmw_prueba_piloto_zona_muerta, 0.24, "NFSMW",
-                      "Pruebas: fraccion del stick por debajo de la cual el juego no gira; las correcciones del "
-                      "piloto empiezan ahi (0,24 es la zona muerta habitual de XInput)")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                      "Testing: fraction of the stick below which the game does not steer; the autopilot's "
+                      "corrections start there (0.24 is the usual XInput deadzone)")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Autopilot stick deadzone");
 
 REX_EXTERN(__imp__sub_824411B8);
 REX_EXTERN(__imp__sub_82366FB0);

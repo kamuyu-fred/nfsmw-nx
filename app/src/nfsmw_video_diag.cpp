@@ -17,8 +17,8 @@
 #include <rex/logging.h>
 
 REXCVAR_DEFINE_BOOL(nfsmw_video_diag, false, "NFSMW",
-                    "Diagnostico de las cinematicas: anota la presentacion de fotogramas de las peliculas (quien "
-                    "llama, hilo, ritmo y buferes)");
+                    "Cutscene diagnostic: logs how movie frames are presented (caller, thread, pacing and buffers)")
+    .display_name("Cutscene presentation (diag)");
 
 namespace nfsmw::video_diag {
 namespace {

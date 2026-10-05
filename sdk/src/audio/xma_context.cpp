@@ -50,16 +50,21 @@ extern "C" {
 // https://github.com/koolkdev/libertyv/blob/master/libav_wrapper/xma2dec.c
 
 REXCVAR_DEFINE_INT32(audio_volcado_xma_s, 0, "Audio",
-                     "Diagnostico: segundos de cada contexto XMA que se guardan en "
-                     "xma_<contexto>_tramas/salida_<hz>.wav junto al ejecutable; 0 = nada");
+                     "Diagnostic: seconds of each XMA context saved to xma_<context>_tramas/salida_<hz>.wav next to "
+                     "the executable; 0 = none")
+    .display_name("Dump XMA contexts (diag, s)");
 REXCVAR_DEFINE_INT32(audio_volcado_xma_desde_s, 0, "Audio",
-                     "Diagnostico: segundos desde el primer audio XMA antes de empezar a volcar");
+                     "Diagnostic: seconds after the first XMA audio before dumping starts")
+    .display_name("XMA dump start (diag, s)");
 REXCVAR_DEFINE_INT32(audio_volcado_xma_contextos, 12, "Audio",
-                     "Diagnostico: contextos XMA que se vuelcan como mucho");
+                     "Diagnostic: maximum number of XMA contexts dumped")
+    .display_name("XMA dump max contexts (diag)");
 REXCVAR_DEFINE_INT32(audio_volcado_xma_mb, 32, "Audio",
-                     "Diagnostico: megas como mucho de audio XMA acumulado sin escribir");
+                     "Diagnostic: maximum megabytes of accumulated XMA audio not yet written")
+    .display_name("XMA dump buffer (diag, MB)");
 REXCVAR_DEFINE_INT32(audio_volcado_xma_min_s, 2, "Audio",
-                     "Diagnostico: segundos minimos de un sonido XMA que se guardan cuando termina");
+                     "Diagnostic: minimum seconds of an XMA sound saved when it ends")
+    .display_name("XMA dump min length (diag, s)");
 
 namespace {
 

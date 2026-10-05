@@ -11,17 +11,19 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_texturas_pool, true, "NFSMW",
-                    "Renderizador nativo (22/09): las texturas toman trozos de bloques grandes de memoria "
-                    "en vez de pedir una reserva dedicada cada una. En Horizon cada reserva dedicada cuesta "
-                    "~1,9 ms de CPU (un nvMapCreate, DOS reservas de direccion y DOS mapeos), y la imagen no "
-                    "cambia. Apagarlo vuelve a la reserva por textura")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: textures take pieces of large memory blocks instead of each asking for a "
+                    "dedicated allocation. On Horizon each dedicated allocation costs ~1.9 ms of CPU (one "
+                    "nvMapCreate, TWO address reservations and TWO mappings), and the image does not change. Turning "
+                    "it off returns to one allocation per texture")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture memory pool");
 
 REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_pool_slab_mb, 32, "NFSMW",
-                     "Renderizador nativo: MB de cada bloque grande del pool de texturas. Mas grande = menos "
-                     "reservas al sistema, pero cada bloque nuevo cuesta un memset de ese tamano")
+                     "Native renderer: MB of each large block of the texture pool. Larger = fewer system "
+                     "allocations, but each new block costs a memset of that size")
     .range(4, 256)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture pool block size (MB)");
 
 namespace nfsmw::nativo {
 namespace {

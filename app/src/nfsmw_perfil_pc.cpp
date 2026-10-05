@@ -30,19 +30,22 @@
 #include <vector>
 
 REXCVAR_DEFINE_INT32(nfsmw_perfil_pc_desde_s, 0, "NFSMW",
-                     "PC: muestrear la CPU de los hilos ocupados desde este segundo de vida del proceso "
-                     "(0 = nunca; solo pruebas). Deja logs/perfil_pc.csv")
+                     "PC: sample the CPU of busy threads from this second of the process's life (0 = never; testing "
+                     "only). Writes logs/perfil_pc.csv")
     .range(0, 3600)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("PC CPU profile start (s)");
 REXCVAR_DEFINE_INT32(nfsmw_perfil_pc_duracion_s, 20, "NFSMW",
-                     "PC: segundos de muestreo de nfsmw_perfil_pc_desde_s")
+                     "PC: seconds of sampling for nfsmw_perfil_pc_desde_s")
     .range(1, 600)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("PC CPU profile duration (s)");
 REXCVAR_DEFINE_INT32(nfsmw_perfil_pc_pilas_s, 0, "NFSMW",
-                     "PC: volcar las pilas de todos los hilos en este segundo de vida del proceso (0 = nunca; "
-                     "solo pruebas). Deja logs/pilas_N.txt; el vigilante tambien vuelca al ver el juego parado")
+                     "PC: dump the stacks of all threads at this second of the process's life (0 = never; testing "
+                     "only). Writes logs/pilas_N.txt; the watchdog also dumps them when it sees the game stalled")
     .range(0, 3600)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("PC thread stack dump at (s)");
 
 namespace nfsmw::perfil_pc {
 namespace {

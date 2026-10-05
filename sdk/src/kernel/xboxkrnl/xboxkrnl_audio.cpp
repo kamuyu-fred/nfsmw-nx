@@ -36,11 +36,12 @@
 #include <vector>
 
 REXCVAR_DEFINE_INT32(audio_volcado_s, 0, "Audio",
-                     "Diagnostico: segundos del audio que entrega el juego (6 canales, antes del "
-                     "driver) que se guardan en audio_volcado_<cliente>.wav junto al ejecutable; "
-                     "0 = nada");
+                     "Diagnostic: seconds of the audio the game delivers (6 channels, before the driver) saved to "
+                     "audio_volcado_<client>.wav next to the executable; 0 = none")
+    .display_name("Dump game audio (diag, s)");
 REXCVAR_DEFINE_INT32(audio_volcado_desde_s, 0, "Audio",
-                     "Diagnostico: segundos de audio de cada cliente que se saltan antes del volcado");
+                     "Diagnostic: seconds of each client's audio skipped before dumping")
+    .display_name("Game audio dump start (diag, s)");
 
 namespace {
 

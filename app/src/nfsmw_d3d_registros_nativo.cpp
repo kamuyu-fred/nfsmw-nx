@@ -59,9 +59,10 @@
 #include <type_traits>  // std::conditional_t in SetTextureNativo
 
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_registros_nativo, true, "NFSMW",
-                    "Volcado de registros cambiados del D3D del juego (sub_825A2AA0) en nativo: una copia "
-                    "en vez de ~15-20 instrucciones por palabra. Resultado identico bit a bit")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Dump of the game's changed D3D registers (sub_825A2AA0) in native code: one copy instead of "
+                    "~15-20 instructions per word. Bit-identical result")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native D3D register dump");
 
 namespace {
 
@@ -341,10 +342,11 @@ inline void Medir(Medida& m, F&& llamar) {
 #include <rex/ppc/intrinsics.h>
 
 REXCVAR_DEFINE_BOOL(nfsmw_visible_nativo, true, "NFSMW",
-                    "eViewPlatInterface::GetVisibleState (sub_8243E7D8: la caja contra los 6 planos de la vista) en "
-                    "nativo (build 174), identico bit a bit. Se comprueba contra la original (las primeras 200.000 "
-                    "llamadas y despues 1 de cada 4096) y se apaga sola si difiere; false = la original")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "eViewPlatInterface::GetVisibleState (sub_8243E7D8: the box against the 6 view planes) in native "
+                    "code (build 174), bit-identical. Checked against the original (the first 200,000 calls, then 1 "
+                    "in 4096) and turns itself off on any difference; false = the original")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native visibility check");
 
 REX_EXTERN(__imp__sub_8243E7D8);
 
@@ -809,11 +811,12 @@ REX_HOOK_RAW(sub_824C2F48) {  // ScenerySectionHeader::TreeCull
 //   the counts.
 // ---------------------------------------------------------------------------------------------------
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_efectos_nativo, true, "NFSMW",
-                    "Envio de parametros de efecto (sub_826992F0) en nativo: entero con "
-                    "nfsmw_d3d_efectos_nativo_todo (build 171); sin el, solo las constantes de coma flotante "
-                    "y, con enteros, booleanos o texturas, la original. Se comprueba contra la original y se "
-                    "apaga sola si difiere")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Effect parameter upload (sub_826992F0) in native code: all of it with "
+                    "nfsmw_d3d_efectos_nativo_todo (build 171); without it, only the floating-point constants, and "
+                    "the original for integers, booleans or textures. Checked against the original and turns itself "
+                    "off on any difference")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native effect parameters");
 
 namespace {
 inline uint64_t Leer64(uint8_t* base, uint32_t direccion) {
@@ -1110,11 +1113,12 @@ REX_EXTERN(__imp__sub_826992F0);
 #include <rex/ppc/intrinsics.h>
 
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_efectos_nativo_todo, true, "NFSMW",
-                    "sub_826992F0 ENTERA en nativo (build 171): tambien las constantes enteras y booleanas y "
-                    "las texturas (SetTexture). Se comprueba contra la original (las primeras 512 llamadas y "
-                    "despues 1 de cada 4096) y se apaga sola si difiere; false = como la build 154 (solo las "
-                    "constantes de coma flotante). Necesita nfsmw_d3d_efectos_nativo")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "ALL of sub_826992F0 in native code (build 171): also integer and boolean constants and textures "
+                    "(SetTexture). Checked against the original (the first 512 calls, then 1 in 4096) and turns "
+                    "itself off on any difference; false = as in build 154 (only floating-point constants). Needs "
+                    "nfsmw_d3d_efectos_nativo")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native effect parameters (all)");
 REXCVAR_DECLARE(bool, nfsmw_d3d_trace);
 
 REX_EXTERN(__imp__sub_82594C70);
@@ -1833,10 +1837,11 @@ REX_HOOK_RAW(sub_826992F0) {  // upload of effect parameters to the device
 //   dumps run instead, since they know how to request space (sub_825A29E8).
 // ---------------------------------------------------------------------------------------------------
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_marcador, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 170, fase 2 del renderizador a nivel de Direct3D): FlushState "
-                    "escribe UN paquete con todos sus registros en vez de ~13 (tipo 0 y relleno). Empieza comprobando "
-                    "contra el camino del juego y se apaga solo si algo difiere. false = como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 170, phase 2 of the Direct3D-level renderer): FlushState writes ONE "
+                    "packet with all its registers instead of ~13 (type 0 and padding). Starts by checking against "
+                    "the game's path and turns itself off if anything differs. false = as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Single-packet FlushState");
 REXCVAR_DECLARE(bool, nfsmw_nativo_sombra_d3d);
 
 REX_EXTERN(__imp__sub_825A2D80);  // streams: writes the vertex fetches to the mirror

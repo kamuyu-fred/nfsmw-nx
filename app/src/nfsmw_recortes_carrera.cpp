@@ -129,9 +129,10 @@
  * It costs ~109 draws per frame (14 k triangles at 640x360).
  */
 REXCVAR_DEFINE_BOOL(nfsmw_reflejo_carretera, true, "NFSMW",
-                    "Dibujar el reflejo de la carretera (pasada 640x360) durante la carrera; el agua tambien "
-                    "lo muestrea, sin el el mar sale negro")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Draw the road reflection (640x360 pass) during races; the water samples it too, and without it "
+                    "the sea comes out black")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Road reflection");
 
 /*
  * The reflection, only when something reads it.
@@ -150,24 +151,28 @@ REXCVAR_DEFINE_BOOL(nfsmw_reflejo_carretera, true, "NFSMW",
  * turns itself off and says so in the log. false = always draw it.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_reflejo_bajo_demanda, true, "NFSMW",
-                    "Dibujar el reflejo de la carretera solo cuando algo lo lee; sin lecturas recientes se renueva 1 de "
-                    "cada nfsmw_reflejo_refresco fotogramas")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Draw the road reflection only when something reads it; with no recent reads it is refreshed 1 "
+                    "in nfsmw_reflejo_refresco frames")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Road reflection on demand");
 /*
  * Measured on the PC (standing at the Heritage start): with 16 instead of the game's 6 the reflection
  * stays at 295-331 draws per copy (317-327 without it): its objects are already large. It gains nothing,
  * so it is off.
  */
 REXCVAR_DEFINE_INT32(nfsmw_reflejo_detalle_minimo, 0, "NFSMW",
-                     "Objetos de menos de N pixeles que no se dibujan en el reflejo de la carretera (vistas 4 y 5), como "
-                     "nfsmw_cubemap_detalle_minimo en el cubo; 0 = el valor del juego (medido sin efecto con 16)")
+                     "Objects smaller than N pixels are not drawn in the road reflection (views 4 and 5), like "
+                     "nfsmw_cubemap_detalle_minimo for the cube; 0 = the game's value (measured with no effect at "
+                     "16)")
     .range(0, 64)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Reflection minimum object size (px)");
 REXCVAR_DEFINE_INT32(nfsmw_reflejo_refresco, 4, "NFSMW",
-                     "Con nfsmw_reflejo_bajo_demanda: cada cuantos fotogramas se renueva el reflejo mientras nadie lo "
-                     "lee (el agua que aparece lo ve como mucho con ese retraso)")
+                     "With nfsmw_reflejo_bajo_demanda: how many frames between refreshes of the reflection while "
+                     "nobody reads it (water that appears sees it with at most that delay)")
     .range(1, 30)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Idle reflection refresh (frames)");
 
 /*
  * The reflection, only if the water is really visible.
@@ -191,9 +196,10 @@ REXCVAR_DEFINE_INT32(nfsmw_reflejo_refresco, 4, "NFSMW",
  * gives 0 it falls back to reads for the whole run and says so in the log. false = by reads.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_reflejo_visibilidad, true, "NFSMW",
-                    "Con nfsmw_reflejo_bajo_demanda: el reflejo se renueva en todos los fotogramas solo si el agua deja "
-                    "alguna muestra en pantalla (consulta de oclusion), y no solo porque se mande a dibujar")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "With nfsmw_reflejo_bajo_demanda: the reflection is refreshed every frame only if the water "
+                    "leaves some sample on screen (occlusion query), not just because it is sent to be drawn")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Reflection visibility check");
 
 namespace nfsmw::reflejo_demanda {
 namespace {
@@ -262,10 +268,11 @@ void AnotarTestigo(bool con_muestras) {
 }  // namespace nfsmw::reflejo_demanda
 
 REXCVAR_DEFINE_INT32(nfsmw_cubemap_caras_max, REX_PLATFORM_SWITCH != 0 ? 1 : -1, "NFSMW",
-                     "Caras del mapa de entorno del coche que se actualizan por fotograma en "
-                     "carrera (-1 = las que decide el juego)")
+                     "Faces of the car's environment map updated per frame during races (-1 = as many as the game "
+                     "decides)")
     .range(-1, 6)
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Car reflection faces per frame");
 
 // On the Switch it is 4: face 2 (view 20), the rear-view mirror's. Confirmed fixed on the console (mask 4,
 // race at 26-31 FPS). It costs ~+270 draws per frame. It used to be 2: face 1 (view 19), which is not the
@@ -291,16 +298,17 @@ REXCVAR_DEFINE_INT32(nfsmw_cubemap_caras_max, REX_PLATFORM_SWITCH != 0 ? 1 : -1,
  * Verified on the console with this enabled; not to be re-checked.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_retrovisor_recorte, true, "NFSMW",
-                    "Devolver al retrovisor (vista 20) los dos bits de recorte de la lista de dibujo que el "
-                    "juego le quita a el solo. Dibuja 415 objetos donde sus hermanas dibujan 6-95, y son el "
-                    "19,6 % de los dibujos del fotograma");
+                    "Give the rear-view mirror (view 20) back the two culling bits of the draw list that the game "
+                    "removes only for it. It draws 415 objects where its sibling views draw 6-95, which is 19.6 % of "
+                    "the frame's draws")
+    .display_name("Rear-view mirror culling");
 
 REXCVAR_DEFINE_INT32(nfsmw_cubemap_caras_siempre, REX_PLATFORM_SWITCH != 0 ? 4 : 0, "NFSMW",
-                     "Caras del mapa de entorno que se actualizan todos los fotogramas aunque haya "
-                     "limite (bit i = cara i de la tabla del juego; no cuentan para "
-                     "nfsmw_cubemap_caras_max)")
+                     "Environment map faces updated every frame even with a limit (bit i = face i of the game's "
+                     "table; they do not count toward nfsmw_cubemap_caras_max)")
     .range(0, 63)
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Car reflection faces always updated");
 
 /*
  * The cubemap costs per draw, so it gets fewer draws.
@@ -325,16 +333,17 @@ REXCVAR_DEFINE_INT32(nfsmw_cubemap_caras_siempre, REX_PLATFORM_SWITCH != 0 ? 4 :
  * of each face. On the PC it shows right away because all six are drawn every frame there.
  */
 REXCVAR_DEFINE_INT32(nfsmw_cubemap_detalle_minimo, 8, "NFSMW",
-                     "Tamano minimo en pixeles para que un objeto se dibuje en una cara del mapa de "
-                     "entorno del coche (eView::PixelMinSize; el juego usa 4 en todas las vistas). Solo "
-                     "se aplica a las caras que rotan, nunca a las fijas. 0 = dejar el valor del juego")
-    .range(0, 64);
+                     "Minimum size in pixels for an object to be drawn in a face of the car's environment map "
+                     "(eView::PixelMinSize; the game uses 4 in every view). Only applied to rotating faces, never to "
+                     "fixed ones. 0 = keep the game's value")
+    .range(0, 64)
+    .display_name("Car reflection minimum object size (px)");
 
 REXCVAR_DEFINE_INT32(nfsmw_cubemap_diag_ciclo_s, 0, "NFSMW",
-                     "Diagnostico: con N > 0, en carrera solo se actualiza una cara del mapa de entorno "
-                     "y cambia de cara cada N segundos (anota cada cambio), para ver cual usa el "
-                     "retrovisor")
-    .range(0, 60);
+                     "Diagnostic: with N > 0, during races only one face of the environment map is updated and it "
+                     "changes face every N seconds (logging each change), to see which one the rear-view mirror uses")
+    .range(0, 60)
+    .display_name("Cycle reflection faces (diag, s)");
 
 namespace nfsmw::recortes_carrera {
 namespace {

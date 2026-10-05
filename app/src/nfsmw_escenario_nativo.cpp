@@ -83,11 +83,12 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_escenario_nativo, true, "NFSMW",
-                    "ScenerySectionHeader::DrawAScenery (sub_824C2850: culling, tamano en pixeles, LOD y SceneryDrawInfo "
-                    "de cada objeto de escenario) en nativo (build 184), identico bit a bit. Se comprueba contra la "
-                    "original (las primeras 100.000 llamadas, las primeras 5.000 con viento y despues 1 de cada 4096) "
-                    "y se apaga sola si difiere; false = la original")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "ScenerySectionHeader::DrawAScenery (sub_824C2850: culling, pixel size, LOD and SceneryDrawInfo "
+                    "of each scenery object) in native code (build 184), bit-identical. Checked against the original "
+                    "(the first 100,000 calls, the first 5,000 with wind, then 1 in 4096) and turns itself off on "
+                    "any difference; false = the original")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native scenery drawing");
 
 // The LOD setting of nfsmw_escenario_lod.cpp (its hook of sub_824C2720). Nonzero: the original runs, since
 // it uses it.

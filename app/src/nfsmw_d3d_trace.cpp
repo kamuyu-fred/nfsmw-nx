@@ -55,14 +55,16 @@
 #endif
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_gotas_lluvia, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 174): anotar los dibujos que el juego hace con la rutina "
-                    "interna del D3D sub_825932D8 (las gotas de lluvia en la pantalla y el cuadrilatero del "
-                    "VisualTreatment). Sin esto las gotas no salen. false = como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 174): record the draws the game makes with the internal D3D routine "
+                    "sub_825932D8 (rain drops on the screen and the VisualTreatment quad). Without this the rain "
+                    "drops do not show. false = as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Record rain-drop draws");
 
 REXCVAR_DEFINE_BOOL(nfsmw_d3d_trace, false, "NFSMW",
-                    "Registrar las llamadas al Direct3D del juego en rex_d3d.log")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Log the game's Direct3D calls to rex_d3d.log")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Direct3D call trace");
 
 namespace nfsmw::d3d_trace {
 namespace {

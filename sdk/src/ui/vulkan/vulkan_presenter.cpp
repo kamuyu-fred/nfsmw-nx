@@ -66,9 +66,10 @@ REXCVAR_DEFINE_BOOL(present_render_pass_clear, true, "UI/Presenter",
 // this, acquisition uses a fence that is waited on the CPU, without the queue lock, and the paint
 // goes without a semaphore.
 REXCVAR_DEFINE_BOOL(present_esperar_adquisicion_en_cpu, false, "UI/Presenter",
-                    "Esperar la imagen de la cadena de intercambio en la CPU (fence) en vez de con un semaforo en el "
-                    "pintado, para no parar el canal de la GPU (prueba de FPS en la Switch)")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Wait for the swapchain image on the CPU (fence) instead of with a semaphore in the paint, so "
+                    "the GPU channel does not stall (FPS test on Switch)")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Wait for swapchain image on CPU");
 
 #if REX_PLATFORM_SWITCH
 // MAILBOX does not exist on the NVK VI surface: wsi_common_switch.c only exposes FIFO and IMMEDIATE.
@@ -161,11 +162,11 @@ REXCVAR_DEFINE_BOOL(vulkan_allow_present_mode_fifo_relaxed, true, "UI/Vulkan",
  * (armGetSystemTick, no syscall): on the order of 1 us out of 39,000.
  */
 REXCVAR_DEFINE_BOOL(present_perfil_pintado, REX_PRESENT_PERFIL_PINTADO_DEFAULT, "UI/Presenter",
-                    "Medir trozo a trozo el tiempo que el hilo que pinta pasa dentro de "
-                    "PaintAndPresent (espera al envio antiguo, reset del pool, adquisicion, buzon, "
-                    "grabacion, candados de la cola, vkQueueSubmit y vkQueuePresentKHR) y volcarlo "
-                    "cada 600 fotogramas. Apagado no cuesta nada")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Measure piece by piece the time the painting thread spends inside PaintAndPresent (wait for the "
+                    "old submission, pool reset, acquire, mailbox, recording, queue locks, vkQueueSubmit and "
+                    "vkQueuePresentKHR) and dump it every 600 frames. Off it costs nothing")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Present timing breakdown (diag)");
 
 /*
  * Dropping the empty submission of every frame (present_refresco_sellado_perezoso).
@@ -199,10 +200,11 @@ REXCVAR_DEFINE_BOOL(present_perfil_pintado, REX_PRESENT_PERFIL_PINTADO_DEFAULT, 
 // was the sky deferral, but this one touches output synchronization, so it was turned off to return
 // to known ground.
 REXCVAR_DEFINE_BOOL(present_refresco_sellado_perezoso, false, "UI/Presenter",
-                    "Quitar el vkQueueSubmit vacio que se hacia en cada refresco de la salida del "
-                    "juego y sellar solo cuando hay que destruir esa imagen (cambio de tamano o "
-                    "apagado). Apagado vuelve al envio por fotograma")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Remove the empty vkQueueSubmit that was made on every refresh of the game output, and seal only "
+                    "when that image has to be destroyed (resize or shutdown). Off returns to one submission per "
+                    "frame")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Lazy output refresh sealing");
 
 namespace rex {
 namespace ui {

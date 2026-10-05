@@ -95,10 +95,11 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_eview_nativo, true, "NFSMW",
-                    "eViewPlatInterface::Render (sub_8243E358, el bucle de submallas de cada modelo) en nativo, "
-                    "identico bit a bit (build 176). Se comprueba contra la original al empezar y 1 de cada 4096 "
-                    "llamadas despues, y se apaga sola si difiere; false = la original")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "eViewPlatInterface::Render (sub_8243E358, the submesh loop of each model) in native code, "
+                    "bit-identical (build 176). Checked against the original at the start and then 1 in 4096 calls, "
+                    "and turns itself off on any difference; false = the original")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native model rendering");
 
 // This file only names by their 8 digits the functions it hooks or that were already hooked
 // (tools/llamadas_directas.py treats any 82xxxxxx address in app/src as hooked); the rest are split (8245_4428).

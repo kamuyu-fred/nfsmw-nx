@@ -36,9 +36,9 @@
 // Native by default. On PC, in the alley test run, it gave 0 differences against the recompiled code over
 // 130 million samples and runs 1.7 and 3.7 times faster.
 REXCVAR_DEFINE_INT32(nfsmw_audio_remuestreo_nativo, 1, "NFSMW",
-                     "Remuestreadores lineales del motor de sonido (sub_826031C0 y sub_82619820): 0 = codigo "
-                     "recompilado, 1 = nativo (mismo resultado bit a bit; por defecto), 2 = validar el nativo contra "
-                     "el recompilado");
+                     "Linear resamplers of the sound engine (sub_826031C0 and sub_82619820): 0 = recompiled code, 1 "
+                     "= native (bit-identical result; default), 2 = validate native against recompiled")
+    .display_name("Native audio resamplers");
 
 REX_EXTERN(__imp__sub_826031C0);
 REX_EXTERN(__imp__sub_82619820);

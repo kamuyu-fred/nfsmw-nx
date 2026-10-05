@@ -39,8 +39,9 @@
 // Native by default. On PC, in the alley test run, it gave 0 differences against the recompiled code
 // over 29 million samples and runs 1.6 times faster.
 REXCVAR_DEFINE_INT32(nfsmw_audio_filtro_nativo, 1, "NFSMW",
-                     "Filtro recursivo del motor de sonido (sub_825CD088): 0 = codigo recompilado, 1 = nativo (mismo "
-                     "resultado bit a bit; por defecto), 2 = validar el nativo contra el recompilado");
+                     "Recursive filter of the sound engine (sub_825CD088): 0 = recompiled code, 1 = native "
+                     "(bit-identical result; default), 2 = validate native against recompiled")
+    .display_name("Native audio filter");
 
 REX_EXTERN(__imp__sub_825CD088);
 

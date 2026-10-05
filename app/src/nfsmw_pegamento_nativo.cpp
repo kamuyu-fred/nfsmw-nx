@@ -80,11 +80,12 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_pegamento_nativo, true, "NFSMW",
-                    "El pegamento de dibujo (sub_82452730 con los flujos, los indices y el dibujo de cada objeto) y el "
-                    "bucle de la lista que lo llama (sub_82454B50) en nativo (build 186), identicos y con las pistas de "
-                    "cache (dcbt) del juego de Xbox 360. Se comprueban en seco contra una copia literal de la original y "
-                    "se apagan solos si difieren; false = las originales")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "The draw glue (sub_82452730 with each object's streams, indices and draw) and the list loop "
+                    "that calls it (sub_82454B50) in native code (build 186), identical and with the Xbox 360 game's "
+                    "cache hints (dcbt). Checked dry against a literal copy of the original and they turn themselves "
+                    "off on any difference; false = the originals")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native draw glue");
 
 REX_EXTERN(__imp__sub_82452730);  // the original glue
 REX_EXTERN(__imp__sub_82454B50);  // the original loop

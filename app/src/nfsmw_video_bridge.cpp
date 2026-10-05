@@ -10,8 +10,9 @@
 // Testing on the Switch showed a regression: planes were copied and then rejected because of
 // the vertices. Only enable explicitly for development.
 REXCVAR_DEFINE_BOOL(nfsmw_native_video, false, "NFSMW",
-                    "Presentar cinematica por Vulkan nativo con respaldo Xenos")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Present cutscenes through native Vulkan, with Xenos as fallback")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Native cutscene presentation");
 
 namespace nfsmw::native {
 namespace {

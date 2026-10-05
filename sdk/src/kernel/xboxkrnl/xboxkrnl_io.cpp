@@ -52,9 +52,11 @@
  * A monotonic clock read per call is a few nanoseconds next to a trip to the SD. It is on.
  */
 REXCVAR_DEFINE_INT32(nfsmw_io_aviso_ms, 8, "Filesystem",
-                     "Avisa en el log de cada apertura o lectura que pase de estos ms (0 = nunca).");
+                     "Logs a warning for every open or read that takes longer than this many ms (0 = never).")
+    .display_name("Slow I/O warning (ms)");
 REXCVAR_DEFINE_INT32(nfsmw_io_resumen_s, 15, "Filesystem",
-                     "Cada cuantos segundos se escribe el resumen [io] (0 = nunca).");
+                     "How many seconds between [io] summaries (0 = never).")
+    .display_name("I/O summary interval (s)");
 
 namespace rex::kernel::xboxkrnl {
 using namespace rex::system;

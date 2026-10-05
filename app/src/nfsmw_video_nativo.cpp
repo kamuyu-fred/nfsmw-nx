@@ -61,21 +61,25 @@ std::string NfsmwUltimoWmvLeido();  // SDK xboxkrnl_io.cpp: last .wmv movie the 
 // On by default: on the PC the four intro movies play every frame through FFmpeg with no rejections,
 // and the shadow comparison gave bit-identical planes.
 REXCVAR_DEFINE_BOOL(nfsmw_video_wmv3_nativo, true, "NFSMW",
-                    "Cinematicas: descodifica los fotogramas WMV3 con FFmpeg en lugar del descodificador "
-                    "recompilado del juego (mismos bytes y mismos buferes de imagen)");
+                    "Cutscenes: decodes WMV3 frames with FFmpeg instead of the game's recompiled decoder (same bytes "
+                    "and same image buffers)")
+    .display_name("Decode cutscenes with FFmpeg");
 REXCVAR_DEFINE_BOOL(nfsmw_video_wmv3_sombra, false, "NFSMW",
-                    "Diagnostico: el juego descodifica y se comparan sus planos con los de FFmpeg para los "
-                    "mismos bytes; guarda la luma del fotograma 30 de cada pelicula en PGM");
+                    "Diagnostic: the game decodes and its planes are compared with FFmpeg's for the same bytes; "
+                    "saves the luma of frame 30 of each movie as PGM")
+    .display_name("Compare WMV3 decoders (diag)");
 REXCVAR_DEFINE_BOOL(nfsmw_video_wmv3_datos_diag, false, "NFSMW",
-                    "Diagnostico: anota las llamadas a la funcion de datos del descodificador WMV3 y los campos "
-                    "del contexto de cada pelicula");
+                    "Diagnostic: logs the calls to the WMV3 decoder's data function and the context fields of each "
+                    "movie")
+    .display_name("WMV3 data calls (diag)");
 // The dubbed videos of a fan translation have B frames (the game's do not). The game decodes them with
 // [ctx+3016] = sub_828C58C8. This diagnostic logs, for the first frames of each movie, the type ([ctx+280]:
 // 0 I, 1 P, 2 B), which planes each decode changes and which context fields it writes, to know where the game
 // leaves the picture of a B frame and what has to be imitated.
 REXCVAR_DEFINE_BOOL(nfsmw_video_wmv3_b_diag, false, "NFSMW",
-                    "Diagnostico: en los primeros fotogramas de cada pelicula anota el tipo, los planos que cambia "
-                    "cada descodificacion (I, P y B) y los campos del contexto que escribe");
+                    "Diagnostic: in the first frames of each movie, logs the type, the planes each decode changes "
+                    "(I, P and B) and the context fields it writes")
+    .display_name("WMV3 frame types (diag)");
 
 REX_EXTERN(__imp__sub_82749C10);
 REX_EXTERN(__imp__sub_827312C0);

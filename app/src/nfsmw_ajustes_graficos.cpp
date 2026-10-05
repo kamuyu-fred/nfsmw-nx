@@ -13,18 +13,18 @@
 #include <string>
 #include <vector>
 
-REXCVAR_DEFINE_STRING(nfsmw_resolucion_interna, "automatico", "Graficos",
-                      "Resolucion a la que dibuja el juego. automatico: 1920x1080 en sobremesa y 1280x720 en "
-                      "portatil, cambiando en marcha al meter y sacar la consola de la base Y siguiendo tambien a "
-                      "Reverse-NX. Ojo: con Reverse-NX los relojes no suben, asi que ahi el 1080p cuesta un tercio "
-                      "de los FPS. 1280x720 es la de la Xbox 360. 1920x1080 la fija siempre. 1024x576 es el modo de "
-                      "menos resolucion del propio juego: 36 % menos pixeles (este pide reiniciar). "
-                      "640x360 y 640x480 bajan mas, pero OJO: medido el 20/09, esto NO cambia la resolucion a la "
-                      "que DIBUJA el juego -sigue en 1280x720- sino solo el tamano al que se encoge al resolver. "
-                      "Lo que ahorra es el posproceso, las copias y el cubo; la escena no se mueve. De 1280x720 a "
-                      "1024x576 son 2,14 ms reales y el posproceso ya baja a 0,03, asi que por debajo queda poco "
-                      "que rascar y el escalado si se ve")
-    .allowed({"automatico", "1280x720", "1920x1080", "1024x576", "640x360", "640x480"});
+REXCVAR_DEFINE_STRING(nfsmw_resolucion_interna, "automatico", "Graphics",
+                      "Resolution the game draws at. Automatic: 1920x1080 docked and 1280x720 handheld, switching on "
+                      "the fly when the console is docked or undocked, and also following Reverse-NX. Note: with "
+                      "Reverse-NX the clocks do not rise, so 1080p there costs about a third of the FPS. 1280x720 is "
+                      "the Xbox 360 resolution. "
+                      "1920x1080 always uses 1080p. 1024x576 is the game's own lowest mode: 36 % fewer pixels "
+                      "(requires a restart). 640x360 and 640x480 do NOT lower the resolution the scene is drawn "
+                      "at (it stays 1280x720), only the size it is shrunk to afterwards: they save a little "
+                      "post-processing time, and the upscaling is visible")
+    .allowed({"automatico", "1280x720", "1920x1080", "1024x576", "640x360", "640x480"})
+    .labels({{"automatico", "Automatic"}})
+    .display_name("Internal resolution");
 
 /*
  * GPU MHz in handheld mode.
@@ -41,11 +41,12 @@ REXCVAR_DEFINE_STRING(nfsmw_resolucion_interna, "automatico", "Graficos",
  * How to check that it worked: the profiler reports the real frequency in every report
  * ("relojes: CPU 1020.0 MHz, GPU 307.2 MHz, ..."). If it still says 307.2, it did not take effect.
  */
-REXCVAR_DEFINE_INT32(nfsmw_switch_gpu_mhz, 460, "Graficos",
-                     "Switch: MHz de GPU que se piden al sistema en portatil (0 = no tocar nada, 384, "
-                     "460). 460,8 MHz es un perfil oficial de Horizon, no un overclock; gasta mas "
-                     "bateria y calienta mas")
-    .allowed({"0", "384", "460"});
+REXCVAR_DEFINE_INT32(nfsmw_switch_gpu_mhz, 460, "Graphics",
+                     "Switch: GPU clock in MHz requested from the system in handheld mode (0 = leave it "
+                     "alone, 384, 460). 460.8 MHz is an official Horizon profile, not an overclock; it uses "
+                     "more battery and runs warmer")
+    .allowed({"0", "384", "460"})
+    .display_name("Handheld GPU clock (MHz)");
 
 /*
  * The trade-off, just in case.
@@ -56,22 +57,25 @@ REXCVAR_DEFINE_INT32(nfsmw_switch_gpu_mhz, 460, "Graficos",
  * fragment ALU. If this firmware lacks it, the default is to leave the GPU as it was rather than
  * raise the RAM clock. With this set to true the trade-off is accepted: high GPU with RAM at 1600.
  */
-REXCVAR_DEFINE_BOOL(nfsmw_switch_ram_1600, false, "Graficos",
-                    "Switch: aceptar el perfil de GPU alta aunque suba la memoria a 1600 MHz. Por "
-                    "defecto NO: si no hay ninguno que deje la RAM donde estaba, la GPU se queda como "
-                    "estaba. El log [apm] dice cual entro");
+REXCVAR_DEFINE_BOOL(nfsmw_switch_ram_1600, false, "Graphics",
+                    "Switch: accept the high GPU profile even if it raises the memory clock to 1600 MHz. "
+                    "Off by default: if no profile keeps the RAM where it was, the GPU is left as it was. "
+                    "The [apm] log line says which one was applied")
+    .display_name("Allow RAM 1600 MHz profile");
 
-REXCVAR_DEFINE_BOOL(nfsmw_switch_saltynx, true, "Graficos",
-                    "Switch: publica los FPS y la resolucion donde los leen los overlays de la consola "
-                    "(SaltyNX) y sigue el modo portatil/sobremesa de Reverse-NX. Sin SaltyNX no hace nada");
+REXCVAR_DEFINE_BOOL(nfsmw_switch_saltynx, true, "Graphics",
+                    "Switch: publishes the FPS and resolution where the console overlays (SaltyNX) read "
+                    "them, and follows Reverse-NX's handheld/docked mode. Does nothing without SaltyNX")
+    .display_name("SaltyNX overlay info");
 
-REXCVAR_DEFINE_BOOL(nfsmw_switch_relojes_reverse, false, "Graficos",
-                    "Switch: que los relojes sigan a Reverse-NX cuando no coincida con el hardware, en los DOS "
-                    "sentidos, pidiendoselo al sysmodule (Horizon OC y demas forks de sys-clk). Si finge SOBREMESA con "
-                    "la consola en la mano, se aplica TU columna de sobremesa (la del perfil del juego o la global): "
-                    "eso es overclock y no sirve para medir. Si finge PORTATIL con la consola en la base, se baja a la "
-                    "columna de portatil y, si la tienes vacia, a los relojes de serie (GPU 307,2 MHz y memoria "
-                    "1331,2). Se suelta al coincidir otra vez y al salir");
+REXCVAR_DEFINE_BOOL(nfsmw_switch_relojes_reverse, false, "Graphics",
+                    "Switch: make the clocks follow Reverse-NX when it does not match the hardware, in BOTH "
+                    "directions, by asking the sysmodule (Horizon OC and other sys-clk forks). If it fakes DOCKED "
+                    "while handheld, YOUR docked column is applied (the game profile's or the global one): that "
+                    "is an overclock and not valid for measuring. If it fakes HANDHELD while docked, the clocks "
+                    "drop to the handheld column or, if that is empty, to the stock clocks (GPU 307.2 MHz, memory "
+                    "1331.2). Released when they match again and on exit")
+    .display_name("Clocks follow Reverse-NX");
 /*
  * The rate it really ticks at, measured on the console (race, no overclock).
  *
@@ -92,11 +96,12 @@ REXCVAR_DEFINE_BOOL(nfsmw_switch_relojes_reverse, false, "Graficos",
  * in the PM4 ring thread spending 6.4-7.5 ms per frame inside presentation without recording the next
  * frame.
  */
-REXCVAR_DEFINE_STRING(nfsmw_limite_fps, "60", "Graficos",
-                      "FPS maximos del juego. 60: sin limite propio (el juego va al ritmo de un vblank de 60 Hz). 30: "
-                      "ritmo fijo de 30 FPS, sin altibajos, con el juego a su velocidad. Se aplica al reiniciar")
+REXCVAR_DEFINE_STRING(nfsmw_limite_fps, "60", "Graphics",
+                      "Maximum game FPS. 60: no limit of its own (the game follows a 60 Hz vblank). 30: a steady "
+                      "30 FPS pace without ups and downs, with the game at normal speed. Applies after a restart")
     .allowed({"60", "30"})
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("FPS limit");
 
 /*
  * Pace fixed by hardware, not by software.
@@ -129,69 +134,95 @@ REXCVAR_DEFINE_STRING(nfsmw_limite_fps, "60", "Graficos",
  * really fits in 33.3 ms. Because of the gap it does not fit, and with the gap closed interval 0
  * gives the same result without the risk of dropping to the next step.
  */
-REXCVAR_DEFINE_UINT32(nfsmw_intervalo_swap, 0, "Graficos",
-                      "Switch: vblanks entre imagenes. 0 = no tocarlo, manda el modo de la swapchain (lo normal "
-                      "desde la compilacion 113: IMMEDIATE, o sea intervalo 0, que es lo que quita el hueco). "
-                      "2 = 30 FPS clavados por el panel, solo util si el trabajo cabe en 33,3 ms. 1 = hasta 60");
+REXCVAR_DEFINE_UINT32(nfsmw_intervalo_swap, 0, "Graphics",
+                      "Switch: vblanks between frames. 0 = leave it to the swapchain mode (the normal setting: "
+                      "IMMEDIATE, i.e. interval 0, which removes the idle gap). 2 = 30 FPS locked by the panel, "
+                      "only useful if the work fits in 33.3 ms. 1 = up to 60")
+    .display_name("Swap interval");
 
 // Optional antialiasing on the output, applied live. The Xbox 360 draws the scene with 4x MSAA; the Switch
 // has none (it costs GPU time and hung NVK in another port), and FXAA smooths the edges with little work.
-REXCVAR_DEFINE_STRING(nfsmw_antialiasing, "apagado", "Graficos",
-                      "Antialiasing de la imagen. apagado: como hasta ahora. fxaa: suaviza los bordes dentados (la Xbox "
-                      "360 usa MSAA 4x, que aqui no hay); cuesta algo de GPU")
-    .allowed({"apagado", "fxaa"});
+REXCVAR_DEFINE_STRING(nfsmw_antialiasing, "apagado", "Graphics",
+                      "Image antialiasing. Off: no antialiasing. FXAA: smooths jagged edges (the Xbox 360 uses 4x "
+                      "MSAA, which is not available here); costs some GPU time")
+    .allowed({"apagado", "fxaa"})
+    .labels({{"apagado", "Off"}, {"fxaa", "FXAA"}})
+    .display_name("Antialiasing");
 
 // Sky glow, applied live. The game's bright pass (PS n137) subtracts the threshold per channel: with an
 // intense blue sky only the blue channel passes and leaves blue edges over the trees. natural: the same
 // glow energy with the hue of the source color. suave: the threshold is applied to luminance, with much
 // less halo.
 // natural is the default: compared on the console, original still showed a noticeable blue halo.
-REXCVAR_DEFINE_STRING(nfsmw_resplandor_cielo, "natural", "Graficos",
-                      "Resplandor del cielo. natural (por defecto): el resplandor del juego sin el azul saturado que deja "
-                      "bordes en arboles y tejados; las luces de colores igual. original: como la Xbox 360, con esos "
-                      "bordes azules. suave: casi sin halo del cielo; las luces de un solo color (freno, policia) brillan "
-                      "menos. Sin coste")
-    .allowed({"original", "natural", "suave"});
+REXCVAR_DEFINE_STRING(nfsmw_resplandor_cielo, "natural", "Graphics",
+                      "Sky glow. Natural (default): the game's glow without the saturated blue that leaves edges on "
+                      "trees and rooftops; colored lights look the same. Original: as on the Xbox 360, with those "
+                      "blue edges. Soft: almost no sky halo; single-color lights (brake lights, police) glow less. "
+                      "No performance cost")
+    .allowed({"original", "natural", "suave"})
+    .labels({{"original", "Original"}, {"natural", "Natural"}, {"suave", "Soft"}})
+    .display_name("Sky glow");
 
 // The game's color filter, applied live: its "visual treatment" (the yellow tint, the desaturation and the
 // vignette of the final composite). Some players find the tint too strong in some areas of the city.
-REXCVAR_DEFINE_STRING(nfsmw_tratamiento_visual, "original", "Graficos",
-                      "Filtro de color del juego (el tono amarillo, la desaturacion y la vineta). original (por "
-                      "defecto): como la Xbox 360. suave: a mitad de fuerza. apagado: sin filtro; el resplandor y los "
-                      "fundidos siguen igual. Sin coste")
-    .allowed({"original", "suave", "apagado"});
+REXCVAR_DEFINE_STRING(nfsmw_tratamiento_visual, "original", "Graphics",
+                      "The game's color filter (the yellow tint, the desaturation and the vignette). Original "
+                      "(default): as on the Xbox 360. Soft: half strength. Off: no filter; the glow and the fades "
+                      "stay the same. No performance cost")
+    .allowed({"original", "suave", "apagado"})
+    .labels({{"original", "Original"}, {"suave", "Soft"}, {"apagado", "Off"}})
+    .display_name("Color filter");
 
 // Optional post-processing, applied live (visible when changed with the menu open). Option lists for the
 // gamepad. The presets use the values from GoldenEye-Recomp (ge_postfx.cpp, public domain).
-REXCVAR_DEFINE_STRING(nfsmw_posproceso, "apagado", "Graficos/Posproceso",
-                      "Posproceso de la imagen. apagado: como la Xbox 360. Preajustes: cine, sepia, noir, frio, calido, "
-                      "vivo, matrix y crt. personalizado: los valores de abajo. La gradacion de un solo canal no cuesta "
-                      "nada; saturacion, vibracion, vineta y lineas hacen algo de trabajo por pixel")
-    .allowed({"apagado", "cine", "sepia", "noir", "frio", "calido", "vivo", "matrix", "crt", "personalizado"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_brillo, "0.00", "Graficos/Posproceso",
-                      "Personalizado: brillo que se suma (0.00 = sin cambio)")
-    .allowed({"-0.20", "-0.15", "-0.10", "-0.05", "0.00", "+0.05", "+0.10", "+0.15", "+0.20"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_contraste, "1.00", "Graficos/Posproceso",
-                      "Personalizado: contraste alrededor del gris medio (1.00 = sin cambio)")
-    .allowed({"0.70", "0.80", "0.90", "1.00", "1.10", "1.20", "1.30", "1.40"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_saturacion, "1.00", "Graficos/Posproceso",
-                      "Personalizado: saturacion (0.00 = blanco y negro, 1.00 = sin cambio)")
-    .allowed({"0.00", "0.25", "0.50", "0.75", "1.00", "1.10", "1.20", "1.35", "1.50", "2.00"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_vibracion, "0.00", "Graficos/Posproceso",
-                      "Personalizado: vibracion, sube mas los colores menos saturados (0.00 = sin cambio)")
-    .allowed({"-0.50", "-0.25", "0.00", "+0.15", "+0.25", "+0.50", "+0.75", "+1.00"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_temperatura, "0.00", "Graficos/Posproceso",
-                      "Personalizado: temperatura, calida (+) o fria (-) (0.00 = sin cambio)")
-    .allowed({"-1.00", "-0.75", "-0.50", "-0.25", "0.00", "+0.25", "+0.50", "+0.75", "+1.00"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_gamma, "1.00", "Graficos/Posproceso",
-                      "Personalizado: gamma, mas de 1 aclara los medios tonos (1.00 = sin cambio)")
-    .allowed({"0.70", "0.80", "0.90", "1.00", "1.10", "1.20", "1.30"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_vineta, "0.00", "Graficos/Posproceso",
-                      "Personalizado: vineta, oscurece los bordes (0.00 = sin vineta)")
-    .allowed({"0.00", "0.20", "0.30", "0.40", "0.55", "0.70", "1.00"});
-REXCVAR_DEFINE_STRING(nfsmw_posproceso_lineas, "0.00", "Graficos/Posproceso",
-                      "Personalizado: lineas de television antigua, una fila de cada tres (0.00 = sin lineas)")
-    .allowed({"0.00", "0.25", "0.50", "0.75", "1.00"});
+REXCVAR_DEFINE_STRING(nfsmw_posproceso, "apagado", "Graphics/Post-processing",
+                      "Image post-processing. Off: as on the Xbox 360. Presets: Cinema, Sepia, Noir, Cool, Warm, "
+                      "Vivid, Matrix and CRT. Custom: the values below. Single-channel grading is free; saturation, "
+                      "vibrance, vignette and scanlines do some work per pixel")
+    .allowed({"apagado", "cine", "sepia", "noir", "frio", "calido", "vivo", "matrix", "crt", "personalizado"})
+    .labels({{"apagado", "Off"},
+             {"cine", "Cinema"},
+             {"sepia", "Sepia"},
+             {"noir", "Noir"},
+             {"frio", "Cool"},
+             {"calido", "Warm"},
+             {"vivo", "Vivid"},
+             {"matrix", "Matrix"},
+             {"crt", "CRT"},
+             {"personalizado", "Custom"}})
+    .display_name("Post-processing");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_brillo, "0.00", "Graphics/Post-processing",
+                      "Custom: brightness added (0.00 = no change)")
+    .allowed({"-0.20", "-0.15", "-0.10", "-0.05", "0.00", "+0.05", "+0.10", "+0.15", "+0.20"})
+    .display_name("Brightness");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_contraste, "1.00", "Graphics/Post-processing",
+                      "Custom: contrast around mid-gray (1.00 = no change)")
+    .allowed({"0.70", "0.80", "0.90", "1.00", "1.10", "1.20", "1.30", "1.40"})
+    .display_name("Contrast");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_saturacion, "1.00", "Graphics/Post-processing",
+                      "Custom: saturation (0.00 = black and white, 1.00 = no change)")
+    .allowed({"0.00", "0.25", "0.50", "0.75", "1.00", "1.10", "1.20", "1.35", "1.50", "2.00"})
+    .display_name("Saturation");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_vibracion, "0.00", "Graphics/Post-processing",
+                      "Custom: vibrance, boosts less saturated colors more (0.00 = no change)")
+    .allowed({"-0.50", "-0.25", "0.00", "+0.15", "+0.25", "+0.50", "+0.75", "+1.00"})
+    .display_name("Vibrance");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_temperatura, "0.00", "Graphics/Post-processing",
+                      "Custom: color temperature, warmer (+) or cooler (-) (0.00 = no change)")
+    .allowed({"-1.00", "-0.75", "-0.50", "-0.25", "0.00", "+0.25", "+0.50", "+0.75", "+1.00"})
+    .display_name("Temperature");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_gamma, "1.00", "Graphics/Post-processing",
+                      "Custom: gamma, above 1 brightens the midtones (1.00 = no change)")
+    .allowed({"0.70", "0.80", "0.90", "1.00", "1.10", "1.20", "1.30"})
+    .display_name("Gamma");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_vineta, "0.00", "Graphics/Post-processing",
+                      "Custom: vignette, darkens the edges (0.00 = no vignette)")
+    .allowed({"0.00", "0.20", "0.30", "0.40", "0.55", "0.70", "1.00"})
+    .display_name("Vignette");
+REXCVAR_DEFINE_STRING(nfsmw_posproceso_lineas, "0.00", "Graphics/Post-processing",
+                      "Custom: old TV scanlines, one row in three (0.00 = no scanlines)")
+    .allowed({"0.00", "0.25", "0.50", "0.75", "1.00"})
+    .display_name("Scanlines");
 
 namespace nfsmw::ajustes {
 namespace {
@@ -328,7 +359,7 @@ void OcultarAjustesSinEfecto() {
   }
   rex::ui::OcultarAjustesEnMenu(ocultos);
   REXLOG_INFO("[ajustes] menu: fuera, porque no hacen nada con el renderizador nativo o los sustituye la categoria "
-              "Graficos: {}; no registrados en esta build: {}",
+              "Graphics: {}; no registrados en esta build: {}",
               registrados.empty() ? "ninguno" : registrados, sin_registrar.empty() ? "ninguno" : sin_registrar);
 }
 

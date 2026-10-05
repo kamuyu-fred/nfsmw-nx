@@ -36,12 +36,14 @@
  * 128 x 64 KB = 8 MB.
  */
 REXCVAR_DEFINE_INT32(nfsmw_io_ventana_kb, 256, "Filesystem",
-                     "Lectura anticipada por fichero, en KB (0 = apagada). Solo datos de solo lectura.");
+                     "Read-ahead per file, in KB (0 = off). Read-only data only.")
+    .display_name("Read-ahead per file (KB)");
 
 // How many windows can exist at once. A hard cap so that opening many files does not eat the RAM.
 // 128 was an arbitrary number; in a whole measured session there were never more than 10 live windows.
 REXCVAR_DEFINE_INT32(nfsmw_io_ventanas_max, 16, "Filesystem",
-                     "Maximo de ficheros con lectura anticipada a la vez.");
+                     "Maximum number of files with read-ahead at the same time.")
+    .display_name("Max read-ahead files");
 
 /*
  * Split large direct reads into pieces of this many MB. 0 = a single call.
@@ -66,7 +68,8 @@ REXCVAR_DEFINE_INT32(nfsmw_io_ventanas_max, 16, "Filesystem",
  * bounds the worst case and fixes short reads, not because a gain is expected.
  */
 REXCVAR_DEFINE_INT32(nfsmw_io_trozo_mb, 4, "Filesystem",
-                     "Parte las lecturas directas grandes en trozos de estos MB (0 = de una sola vez).");
+                     "Splits large direct reads into chunks of this many MB (0 = all at once).")
+    .display_name("Large read chunk size (MB)");
 
 /*
  * RAM read cache by blocks (nfsmw_io_cache_mb, off). The game rereads the same data from the SD
@@ -110,8 +113,9 @@ REXCVAR_DEFINE_INT32(nfsmw_io_trozo_mb, 4, "Filesystem",
  * ================================================================================================
  */
 REXCVAR_DEFINE_INT32(nfsmw_io_cache_mb, 0, "Filesystem",
-                     "Cache en RAM de lo ya leido del disco, en MB (0 = apagada). Solo datos de solo "
-                     "lectura. El juego relee cada vuelta lo mismo.");
+                     "RAM cache of what has already been read from disk, in MB (0 = off). Read-only data only. The "
+                     "game rereads the same data every lap.")
+    .display_name("Disk read cache (MB)");
 
 /*
  * Read cache by exact range. This is the second attempt, not the block cache above.
@@ -169,21 +173,25 @@ REXCVAR_DEFINE_INT32(nfsmw_io_cache_mb, 0, "Filesystem",
  * and the thread stacks, 64 MB leaves margin; 128 would not in the pessimistic case.
  */
 REXCVAR_DEFINE_INT32(nfsmw_io_rangos_mb, 64, "Filesystem",
-                     "Cache de lecturas por rango exacto, tope total en MB (0 = apagada). 64 = la huella "
-                     "medida de una carrera (56,6 MB) sin expulsiones; mas no compra nada.");
+                     "Cache of reads by exact range, total limit in MB (0 = off). 64 = the measured footprint of a "
+                     "race (56.6 MB) with no evictions; more buys nothing.")
+    .display_name("Exact-range read cache (MB)");
 
 // Floor, in KB. At 4 MB it left out everything that is reread during a race (0.14-2.0 MB).
 REXCVAR_DEFINE_INT32(nfsmw_io_rangos_min_kb, 256, "Filesystem",
-                     "Solo se cachean las lecturas de estos KB o mas. 256 = el punto donde la simulacion "
-                     "deja de ganar (con 128 suben las expulsiones y bajan los aciertos).");
+                     "Only reads of this many KB or more are cached. 256 = the point where the simulation stops "
+                     "gaining (with 128, evictions go up and hits go down).")
+    .display_name("Range cache min read (KB)");
 
 // Compatibility: the old cvar in MB. If a toml sets it to a value > 0, it overrides the KB one.
 REXCVAR_DEFINE_INT32(nfsmw_io_rangos_min_mb, 0, "Filesystem",
-                     "OBSOLETO (build 131): usar nfsmw_io_rangos_min_kb. Si es > 0 manda sobre el de KB.");
+                     "OBSOLETE (build 131): use nfsmw_io_rangos_min_kb. If > 0 it overrides the KB one.")
+    .display_name("Range cache min read (MB, obsolete)");
 
 // Per-entry ceiling: a single read cannot take more than this out of the total cap.
 REXCVAR_DEFINE_INT32(nfsmw_io_rangos_max_mb, 12, "Filesystem",
-                     "Ninguna entrada de la cache de rangos pasa de estos MB.");
+                     "No range cache entry is larger than this many MB.")
+    .display_name("Range cache max entry (MB)");
 
 namespace rex::filesystem {
 

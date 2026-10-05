@@ -23,8 +23,9 @@
 #include <rex/ui/vulkan/device.h>
 
 REXCVAR_DEFINE_BOOL(vulkan_native_shader_features, false, "UI/Vulkan",
-                    "Habilitar capacidades disponibles para los shaders nativos experimentales")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Enable the device features available to the experimental native shaders")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native shader features");
 
 REXCVAR_DEFINE_BOOL(vulkan_require_fragment_stores_and_atomics, true, "UI/Vulkan",
                     "Deprecated and ignored for parity; fragmentStoresAndAtomics is always "

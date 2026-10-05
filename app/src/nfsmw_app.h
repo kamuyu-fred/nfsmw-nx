@@ -222,7 +222,7 @@ class NfsmwApp : public rex::ReXApp {
     // the game requests it, and the settings that do nothing are removed from the F4 menu.
     nfsmw::ajustes::AplicarAjustesGraficos();
     nfsmw::ajustes::OcultarAjustesSinEfecto();
-    // Optional post-processing (Graficos/Posproceso) and antialiasing: the output pass picks them up live.
+    // Optional post-processing (Graphics/Post-processing) and antialiasing: the output pass picks them up live.
     nfsmw::ajustes::VigilarAjustesEnVivo();
     // Without a GPU plugin the screen stays black: the game runs, but the
     // runtime discards its graphics calls with "no GPU emulation loaded".

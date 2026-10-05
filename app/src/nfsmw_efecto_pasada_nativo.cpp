@@ -80,11 +80,12 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_efecto_pasada_nativo, true, "NFSMW",
-                    "Inicio de pasada de un efecto (sub_82448E80: mascaras de sucio, sombreadores y estados de render y "
-                    "de muestreo) en nativo (build 185), identico. Se comprueba en seco contra una copia literal de la "
-                    "original (las primeras 20.000 llamadas, las primeras 2.000 de cada camino raro y despues 1 de cada "
-                    "4096) y se apaga sola si difiere; false = la original")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Start of an effect pass (sub_82448E80: dirty masks, shaders, render and sampler states) in "
+                    "native code (build 185), identical. Checked dry against a literal copy of the original (the "
+                    "first 20,000 calls, the first 2,000 of each rare path, then 1 in 4096) and turns itself off on "
+                    "any difference; false = the original")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native effect pass start");
 
 REX_EXTERN(__imp__sub_82448E80);  // la original
 REX_EXTERN(sub_8259BDC0);         // SetPixelShader through its hook (nfsmw_d3d_trace.cpp), like the original

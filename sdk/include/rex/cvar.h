@@ -72,6 +72,9 @@
  * - .lifecycle(kHotReload) - Default; can change at runtime with immediate effect
  * - .range(min, max) - Numeric bounds validation
  * - .allowed({...}) - String enum validation
+ * - .display_name("...") - Name shown in the settings UI instead of the cvar name
+ * - .labels({{value, label}, ...}) - Labels shown in the settings UI for allowed values;
+ *   the stored value (config file, SetFlagByName) stays the raw one
  * - .debug_only() - Mark as debug-only (for filtering in release UIs)
  * - .validator(fn) - Custom validation function
  *
@@ -173,6 +176,9 @@ struct FlagEntry {
   std::string default_value;
   bool is_debug_only = false;
   Source source = Source::kDefault;
+  // Settings UI only: shown name and per-value labels. Empty means use the raw name/value.
+  std::string display_name{};
+  std::vector<std::pair<std::string, std::string>> value_labels{};
 };
 
 std::vector<FlagEntry>& GetRegistry();
@@ -289,6 +295,17 @@ struct FlagRegistrar {
   FlagRegistrar&& allowed(std::initializer_list<std::string> values) && {
     std::vector<std::string> vals(values);
     apply_([vals = std::move(vals)](FlagEntry& entry) { entry.constraints.allowed_values = vals; });
+    return std::move(*this);
+  }
+
+  FlagRegistrar&& display_name(std::string name) && {
+    apply_([name = std::move(name)](FlagEntry& entry) { entry.display_name = name; });
+    return std::move(*this);
+  }
+
+  FlagRegistrar&& labels(std::initializer_list<std::pair<std::string, std::string>> value_labels) && {
+    std::vector<std::pair<std::string, std::string>> vals(value_labels);
+    apply_([vals = std::move(vals)](FlagEntry& entry) { entry.value_labels = vals; });
     return std::move(*this);
   }
 

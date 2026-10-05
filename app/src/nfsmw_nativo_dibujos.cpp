@@ -136,9 +136,10 @@ static const uint32_t kSpirvResplandorSuave[1] = {0};
  * that state; one of them was worth 2 ms and had been inactive for six builds.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_mosaico_rapido, true, "NFSMW",
-                    "Renderizador nativo (24/09, build 167): desenmosaicado de texturas de 16 en 16 bytes con el "
-                    "calculo de la fila hecho una vez. Los primeros 2000 niveles se comprueban contra el de siempre "
-                    "y, si uno difiere, se apaga solo. false = el de siempre, bloque a bloque");
+                    "Native renderer (build 167): texture untiling 16 bytes at a time with the row computed once. "
+                    "The first 2000 levels are checked against the usual one and, if one differs, it turns itself "
+                    "off. false = the usual one, block by block")
+    .display_name("Fast texture untiling");
 
 /*
  * The FramebufferDe cache forgets destroyed views. It is keyed by handle values (render pass, 5 views
@@ -150,33 +151,34 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_mosaico_rapido, true, "NFSMW",
  * is forgotten).
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_framebuffers_olvidan_vistas, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): al destruir una imagen de C2 se destruyen los "
-                    "framebuffers que usan su vista, para que un handle reutilizado no devuelva uno viejo. false = "
-                    "como antes");
+                    "Native renderer (build 184): when a C2 image is destroyed, the framebuffers that use its view "
+                    "are destroyed too, so a reused handle does not return a stale one. false = as before")
+    .display_name("Drop framebuffers with their views");
 
 REXCVAR_DEFINE_INT32(nfsmw_nativo_huellas_kb_fotograma, 6144, "NFSMW",
-                     "Renderizador nativo (24/09, build 165): KB de texturas ESTABLES que el anillo vuelve a "
-                     "comprobar como mucho en un fotograma; las que no caben esperan 1-2 fotogramas (8 veces "
-                     "seguidas como mucho). Reparte las comprobaciones que coincidian en el mismo fotograma. "
-                     "0 = sin limite, como antes");
+                     "Native renderer (build 165): KB of STABLE textures the ring rechecks at most in one frame; "
+                     "those that do not fit wait 1-2 frames (at most 8 times in a row). Spreads out checks that fell "
+                     "on the same frame. 0 = no limit, as before")
+    .display_name("Texture recheck budget (KB/frame)");
 
 /*
  * Sampled recheck of stable textures. See PrepararTextura and HuellaMuestra.
  * Enabled by default: its guard verifies itself and switches off at the first mismatch.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_huellas_muestreo, 8, "NFSMW",
-                     "Renderizador nativo (25/09, build 170): las texturas ESTABLES se recomprueban con la huella de "
-                     "una muestra (primer y ultimo bloque de 4 KB y 1 de cada 8, base y mips) en vez de con todos sus "
-                     "bytes; si la muestra cambia se sigue por el camino completo. N = 1 de cada N recomprobaciones de "
-                     "cada textura sigue siendo completa, y las 3000 primeras hacen las dos huellas: con un solo "
-                     "desacuerdo se apaga solo. 0 = siempre la huella completa, como antes")
-    .range(0, 64);
+                     "Native renderer (build 170): STABLE textures are rechecked with the hash of a sample (first "
+                     "and last 4 KB block and 1 in 8, base and mips) instead of all their bytes; if the sample "
+                     "changes, the full path follows. N = 1 in N rechecks of each texture is still full, and the "
+                     "first 3000 compute both hashes: a single disagreement turns it off. 0 = always the full hash, "
+                     "as before")
+    .range(0, 64)
+    .display_name("Sampled texture hashing");
 
 REXCVAR_DEFINE_BOOL(nfsmw_sombras_sin_vegetacion, true, "NFSMW",
-                    "No dibujar en el mapa de sombras lo que lleva prueba de alfa: arboles, arbustos y "
-                    "vallas de alambre. Son el 55 % de los dibujos del pase y el 12 % de sus triangulos, "
-                    "asi que ahorra poca GPU (-1,2 ms) y bastante CPU (-3,1 ms). Los arboles dejan de "
-                    "proyectar sombra");
+                    "Do not draw alpha-tested geometry into the shadow map: trees, bushes and wire fences. They are "
+                    "55 % of the pass's draws and 12 % of its triangles, so it saves little GPU (-1.2 ms) and a fair "
+                    "amount of CPU (-3.1 ms). Trees stop casting shadows")
+    .display_name("No vegetation in shadows");
 
 /*
  * Radial blur of the final composite, removed by default (true).
@@ -188,23 +190,27 @@ REXCVAR_DEFINE_BOOL(nfsmw_sombras_sin_vegetacion, true, "NFSMW",
  * hard to notice next to the 360 footage, so it stays removed. false = keep the blur, as on the Xbox 360.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_sin_desenfoque, true, "NFSMW",
-                    "Quitar el desenfoque radial de la composicion final. Son 7 de los 12 muestreos del "
-                    "unico cuadrilatero a pantalla completa del posproceso (1,5-2,0 ms reales). Se pierde "
-                    "el difuminado de los bordes al acelerar y con el NOS: la imagen queda mas nitida");
+                    "Remove the radial blur from the final composite. It is 7 of the 12 samples of the "
+                    "post-processing's only full-screen quad (1.5-2.0 ms real). The edge blur when accelerating and "
+                    "with NOS is lost: the image is sharper")
+    .display_name("No radial blur");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_omitir_sombras, false, "NFSMW",
-                    "Renderizador nativo (prueba de FPS): no graba los dibujos del mapa de sombras "
-                    "(destino solo de profundidad de 1600 o mas de pitch); recorte visible");
+                    "Native renderer (FPS test): does not record the shadow map draws (depth-only target with a "
+                    "pitch of 1600 or more); visible cut")
+    .display_name("Skip shadow maps (test)");
 // Enabled by default. On the console (A and B alternating every 30 s), the UBO intervals run 18-23 %
 // faster than the neighbouring pointer intervals at the same draw load.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_constantes_ubo, true, "NFSMW",
-                    "Renderizador nativo: los shaders leen sus constantes de UBO dinamicos (banco de constantes en "
-                    "Maxwell) en vez de por puntero de 64 bits. Mismos bytes: no cambia la imagen. Necesita la "
-                    "biblioteca de shaders con SPEC_CONSTANT_CONSTANTES_UBO; false vuelve al puntero");
+                    "Native renderer: shaders read their constants from dynamic UBOs (constant bank on Maxwell) "
+                    "instead of through a 64-bit pointer. Same bytes: the image does not change. Needs the shader "
+                    "library with SPEC_CONSTANT_CONSTANTES_UBO; false returns to the pointer")
+    .display_name("Shader constants via UBO");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_constantes_ubo_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba): con N > 0 alterna las constantes entre puntero (tramos pares) y "
-                     "UBO (tramos impares) cada N segundos y anota cada cambio, para comparar capturas de una escena "
-                     "quieta en la misma ejecucion");
+                     "Native renderer (test): with N > 0 alternates the constants between pointer (even stretches) "
+                     "and UBO (odd stretches) every N seconds and logs each change, to compare captures of a still "
+                     "scene in the same run")
+    .display_name("Alternate constants path (test, s)");
 /*
  * Descriptor set 4 by differences (the work is done in NVK, see mesa/parche_nvk_set4.py).
  *
@@ -226,13 +232,15 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_constantes_ubo_alternar_s, 0, "NFSMW",
 // single difference, and the Draw rebound 38-45 % fewer cbufs. The patched Mesa (p03 in
 // mesa/c186_dibujo) samples with the process-wide count.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_set4_diferencias, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): el conjunto 4 (constantes por UBO) por diferencias en "
-                    "NVK: solo se mandan y se reenlazan los descriptores que cambian. Mismo resultado (se comprueba "
-                    "sola). Necesita el Mesa con parche_nvk_set4; false = como siempre");
+                    "Native renderer (build 184): descriptor set 4 (constants via UBO) updated incrementally in NVK: "
+                    "only the descriptors that change are sent and rebound. Same result (checks itself). Needs Mesa "
+                    "with parche_nvk_set4; false = as always")
+    .display_name("Incremental descriptor set 4");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_set4_diferencias_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 184): con N > 0 alterna el conjunto 4 por diferencias "
-                     "(tramos impares) y como siempre (tramos pares) cada N segundos y anota cada cambio, para "
-                     "comparar C6 subetapas en la misma ejecucion. 0 = no alterna");
+                     "Native renderer (test, build 184): with N > 0 alternates incremental set 4 (odd stretches) and "
+                     "the usual way (even stretches) every N seconds and logs each change, to compare 'C6 subetapas' "
+                     "in the same run. 0 = no alternation")
+    .display_name("Alternate set 4 mode (test, s)");
 /*
  * The draw path in NVK (Mesa with p01-p04 and p06 from mesa/c186_dibujo).
  *
@@ -250,29 +258,35 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_set4_diferencias_alternar_s, 0, "NFSMW",
  * With an unpatched Mesa (or on PC) none of this does anything.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_nvk_medir, 64, "NFSMW",
-                     "Renderizador nativo (26/09, build 186): mide por partes dentro de NVK 1 de cada N llamadas "
-                     "(potencia de 2; C6 NVK por partes cada 10 s). 0 = no mide")
-    .range(0, 4096);
+                     "Native renderer (build 186): measures the stages inside NVK for 1 in N calls (power of 2; 'C6 "
+                     "NVK por partes' every 10 s). 0 = no measuring")
+    .range(0, 4096)
+    .display_name("NVK per-stage timing (1 in N)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_nvk_medir_fallos, false, "NFSMW",
-                    "Renderizador nativo (prueba, build 186): lee antes lo que va a usar el enlace de pipeline y el "
-                    "flush de shaders y lo mide aparte (cuanto son fallos de cache). Hace trabajo de mas: solo para "
-                    "medir");
+                    "Native renderer (test, build 186): reads ahead what the pipeline bind and the shader flush will "
+                    "use and measures it separately (how much is cache misses). Does extra work: for measuring only")
+    .display_name("NVK cache-miss timing (test)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_nvk_emision, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 186): NVK escribe cada orden del dibujo de una vez, con los "
-                    "mismos bytes (se comprueba sola). false = como siempre");
+                    "Native renderer (build 186): NVK writes each draw command in one go, with the same bytes "
+                    "(checks itself). false = as always")
+    .display_name("NVK single-write draw emission");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_nvk_cbufs, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 186): NVK solo mira las casillas de cbufs que pueden ensuciarse "
-                    "y se salta el flush de cbufs si no hay nada sucio (se comprueba sola). false = como siempre");
+                    "Native renderer (build 186): NVK only looks at the cbuf slots that can get dirty and skips the "
+                    "cbuf flush when nothing is dirty (checks itself). false = as always")
+    .display_name("NVK dirty cbuf tracking");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_nvk_dinamico, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 186): NVK solo emite los grupos de estado dinamico con bits "
-                    "sucios (se comprueba sola). false = como siempre");
+                    "Native renderer (build 186): NVK only emits the dynamic state groups with dirty bits (checks "
+                    "itself). false = as always")
+    .display_name("NVK dirty dynamic state only");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_nvk_precarga, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 186): pistas de cache (PRFM) del pipeline y de los shaders antes "
-                    "de usarlos, y el pipeline pedido tras PipelineDe. No cambia nada. false = sin pistas");
+                    "Native renderer (build 186): cache hints (PRFM) for the pipeline and shaders before they are "
+                    "used, and the pipeline requested after PipelineDe. Changes nothing. false = no hints")
+    .display_name("NVK prefetch hints");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_nvk_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 186): con N > 0 alterna las cuatro mejoras de NVK (tramos "
-                     "impares encendidas, pares apagadas) cada N segundos, para comparar en la misma ejecucion. "
-                     "0 = no alterna");
+                     "Native renderer (test, build 186): with N > 0 alternates the four NVK improvements (on in odd "
+                     "stretches, off in even ones) every N seconds, to compare within the same run. 0 = no "
+                     "alternation")
+    .display_name("Alternate NVK improvements (test, s)");
 
 #if REX_PLATFORM_SWITCH
 /*
@@ -361,16 +375,18 @@ static_assert(sizeof(NvkSwitchDibujo) == 24 + 16 * 16 + 13 * 8 + 5 * 40, "NvkSwi
  * rear-view mirror. If anything looks blurry or delayed, disable this cvar in the toml.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_cache_texturas_entre_fotogramas, true, "NFSMW",
-                    "Renderizador nativo: las caches de samplers valen entre fotogramas (build 128) mientras no toque "
-                    "comprobar el contenido de la textura. false: caducan en cada fotograma, como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: sampler caches stay valid across frames (build 128) until the texture's "
+                    "contents are due for a check. false: they expire every frame, as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Keep sampler caches across frames");
 // Uploads the game's mip levels. With only the base level of each texture, distant surfaces looked grainy
 // compared with the Xbox 360. This also fixes the base level of small textures with packed mips, which
 // does not start at the base address.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_mipmaps, true, "NFSMW",
-                    "Renderizador nativo: sube los niveles de mip que trae el juego (como en la Xbox 360). false: solo "
-                    "el nivel base, como antes de la build 136")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: uploads the mip levels the game provides (as on the Xbox 360). false: only the "
+                    "base level, as before build 136")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture mipmaps");
 // A mip level read from the wrong place (packed tail offset, row or slice alignment) causes no Vulkan
 // errors, only smudges in the distance. The game's mips are reductions of the base level, so their
 // average color has to resemble the base level's.
@@ -407,11 +423,12 @@ constexpr int32_t kTexturasMbMaxPorDefecto = 512;
 constexpr int32_t kTexturasMbMaxPorDefecto = 384;
 #endif
 REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_mb_max, kTexturasMbMaxPorDefecto, "NFSMW",
-                     "Renderizador nativo: MB de texturas a partir de los que se sueltan las que llevan mas tiempo sin "
-                     "usarse (al menos 120 fotogramas), hasta bajar al 75 %. Si el juego las vuelve a pedir, se suben "
-                     "otra vez. 0 = sin limite, como antes de la build 144")
+                     "Native renderer: MB of textures above which the ones unused the longest (at least 120 frames) "
+                     "are released, down to 75 %. If the game asks for them again, they are uploaded again. 0 = no "
+                     "limit, as before build 144")
     .range(0, 4096)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture memory limit (MB)");
 /*
  * Creating a new texture without stalling the ring thread.
  *
@@ -426,16 +443,19 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_mb_max, kTexturasMbMaxPorDefecto, "NF
  * placeholder textures and no lower mips.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_texturas_enlace_hilo, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): el vkBindImageMemory de las texturas nuevas (reserva de "
-                    "direccion y mapeo en Horizon, ~0,6 ms cada una) va en un hilo aparte y el anillo sigue grabando; "
-                    "antes de enviar se espera lo que falte. Mismo resultado (se comprueba sola). false = en el anillo")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 184): vkBindImageMemory for new textures (address reservation and "
+                    "mapping on Horizon, ~0.6 ms each) runs on a separate thread while the ring keeps recording; "
+                    "anything outstanding is waited for before submitting. Same result (checks itself). false = on "
+                    "the ring")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Bind textures on a thread");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_enlace_hilo_prioridad, 0x2D, "NFSMW",
-                     "Renderizador nativo (build 184): prioridad del hilo de enlaces de texturas. 0x2D, la del anillo: "
-                     "por encima del invitado (0x3B) para que un ioctl terminado no espere nucleo, y fuera de las "
-                     "franjas del audio (0x2B) y de la presentacion (0x2C). Casi todo el tiempo duerme en el ioctl")
+                     "Native renderer (build 184): priority of the texture binding thread. 0x2D, the ring's: above "
+                     "the guest (0x3B) so a finished ioctl does not wait for a core, and outside the audio (0x2B) "
+                     "and presentation (0x2C) bands. It spends almost all its time asleep in the ioctl")
     .range(0x2C, 0x3B)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture bind thread priority");
 /*
  * Hashing and untiling of new textures, off the ring thread.
  *
@@ -453,78 +473,88 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_enlace_hilo_prioridad, 0x2D, "NFSMW",
 // and switched it off; also, analysis showed that texture creation causes no race stutter (56 us per
 // texture on the ring) and that the zone-change stutter is limited by the game itself.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_texturas_huella_hilo, false, "NFSMW",
-                    "Renderizador nativo (26/09, build 185): la huella (XXH3), el desenmosaicado y el orden de bytes de "
-                    "las texturas nuevas los hace un hilo aparte sobre una copia de la memoria del invitado tomada en el "
-                    "anillo; antes de enviar se recoge lo que falte. Mismo resultado (se comprueba sola). false = en el "
-                    "anillo, como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 185): hashing (XXH3), untiling and byte swapping of new textures are "
+                    "done by a separate thread on a copy of guest memory taken on the ring; anything outstanding is "
+                    "collected before submitting. Same result (checks itself). false = on the ring, as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Hash textures on a thread");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_huella_hilo_prioridad, 0x2E, "NFSMW",
-                     "Renderizador nativo (build 185): prioridad del hilo de huellas de texturas. 0x2E: por debajo del "
-                     "anillo (0x2D), que lo desaloja en cuanto tiene trabajo, y por encima del invitado (0x3B), que asi "
-                     "no lo deja sin nucleo; fuera del audio (0x2B) y de la presentacion (0x2C)")
+                     "Native renderer (build 185): priority of the texture hashing thread. 0x2E: below the ring "
+                     "(0x2D), which preempts it as soon as it has work, and above the guest (0x3B), so the guest "
+                     "does not starve it; outside audio (0x2B) and presentation (0x2C)")
     .range(0x2C, 0x3B)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture hash thread priority");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_huella_hilo_nucleo, -2, "NFSMW",
-                     "Renderizador nativo (build 185): nucleo preferido del hilo de huellas. -2 = automatico: el 2, o el "
-                     "1 si el anillo corre en el 2 (en el nucleo del anillo, ocupado, casi no correria); -1 = el de por "
-                     "defecto del proceso; 0-2 = uno concreto. No es exclusivo")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                     "Native renderer (build 185): preferred core of the hashing thread. -2 = automatic: core 2, or "
+                     "core 1 if the ring runs on core 2 (on the busy ring core it would hardly run); -1 = the "
+                     "process default; 0-2 = a specific one. Not exclusive")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture hash thread core");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_texturas_huella_hilo_mb, 16, "NFSMW",
-                     "Renderizador nativo (build 185): MB para las copias de la memoria del invitado de las texturas "
-                     "nuevas de un envio. Lo que no cabe se prepara en el anillo, como antes")
+                     "Native renderer (build 185): MB for the guest-memory copies of a submission's new textures. "
+                     "What does not fit is prepared on the ring, as before")
     .range(4, 64)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture hash thread buffer (MB)");
 /*
  * Measurement only: new textures whose content repeats a live one. See AnotarContenidoTextura. It changes
  * no decision of the ring: it only counts, and reports every 10 s in the "C3 reutilizar por contenido"
  * line.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_reutilizar, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 186, solo medida): cuenta cuantas texturas nuevas tienen el "
-                    "mismo contenido y forma que otra viva de la cache (el juego recarga los packs en otra direccion) "
-                    "y cuantas de esas otras llevan mas de 120 fotogramas sin usarse. No cambia nada. false = sin "
-                    "contar")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 186, measurement only): counts how many new textures have the same "
+                    "contents and shape as another live one in the cache (the game reloads packs at a different "
+                    "address) and how many of those others have gone unused for over 120 frames. Changes nothing. "
+                    "false = no counting")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Texture reuse stats (diag)");
 /*
  * Pipeline prewarming. A pipeline that is not in the Vulkan cache is compiled on the fly on the ring: 68-159 ms
  * each on the console (56 of them in the first race, 5.2 s of stutter). It happens the first time after any
  * change to the shader library, the driver or the key, and on a fresh install. See BuclePrecalentado.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_pipelines_precalentar, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 186): al arrancar, un hilo de la prioridad mas baja vuelve a "
-                    "crear en la cache de Vulkan los pipelines que el anillo creo en partidas anteriores "
-                    "(su lista va en cache/nfsmw_nativo_pipelines.bin), con la misma funcion que el anillo, y los destruye: cuando el "
-                    "anillo los pide ya estan compilados (sin los tirones de 70-160 ms por pipeline de la primera "
-                    "carrera tras un cambio). No cambia ningun pipeline ni ningun dibujo. false = sin precalentar (la "
-                    "lista se sigue guardando)")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 186): at startup, a lowest-priority thread recreates in the Vulkan cache "
+                    "the pipelines the ring created in earlier sessions (listed in "
+                    "cache/nfsmw_nativo_pipelines.bin), with the same function as the ring, and destroys them: when "
+                    "the ring asks for them they are already compiled (no 70-160 ms stutter per pipeline in the "
+                    "first race after an update). Changes no pipeline or draw. false = no prewarming (the list is "
+                    "still saved)")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Prewarm pipelines");
 // Testing only. Pretends the GPU runs out of memory on one in N texture allocations, to check that the
 // emergency path (stop the GPU, release half the cache and retry) really works. 0 does nothing, which is the
 // normal setting.
 REXCVAR_DEFINE_INT32(nfsmw_nativo_prueba_sin_memoria_cada, 0, "NFSMW",
-                     "Renderizador nativo (solo pruebas): finge que falta memoria en la GPU una de cada N reservas "
-                     "de textura, para ejercitar la recuperacion. 0 = apagado")
+                     "Native renderer (testing only): pretends the GPU is out of memory on 1 in N texture "
+                     "allocations, to exercise the recovery. 0 = off")
     .range(0, 100000)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Simulate GPU out-of-memory (test)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_mips, false, "NFSMW",
-                    "Renderizador nativo (diagnostico): compara el color medio de cada nivel de mip con el de la base en "
-                    "las texturas DXT1/3/5 y 8888 y anota las que no se parecen (un nivel leido de otro sitio). No "
-                    "cambia la imagen")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (diagnostic): compares the average color of each mip level with the base level "
+                    "in DXT1/3/5 and 8888 textures and logs the ones that do not match (a level read from somewhere "
+                    "else). Does not change the image")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Mip level check (diag)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_prueba_depth_clamp, false, "NFSMW",
-                    "Renderizador nativo (solo pruebas, 17/09 build 149): depthClampEnable en todos los pipelines. Imita "
-                    "lo que parece hacer NVK en la consola con lo que queda detras del plano lejano (el sol de las "
-                    "consultas de oclusion de la escena)")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (testing only, build 149): depthClampEnable on all pipelines. Imitates what NVK "
+                    "seems to do on the console with what lies behind the far plane (the sun of the scene's "
+                    "occlusion queries)")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Depth clamp everywhere (test)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_resplandor_suave_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 150): con N > 0 va rotando el resplandor del cielo original, "
-                     "natural y suave (nfsmw_resplandor_cielo) cada N segundos y anota cada cambio, para comparar "
-                     "capturas del mismo sitio");
+                     "Native renderer (test, build 150): with N > 0 rotates the sky glow between original, natural "
+                     "and soft (nfsmw_resplandor_cielo) every N seconds and logs each change, to compare captures of "
+                     "the same spot")
+    .display_name("Rotate sky glow modes (test, s)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_prueba_oclusion_siempre, false, "NFSMW",
-                    "Renderizador nativo (solo pruebas, 17/09 build 150): los dibujos sin color de una consulta de "
-                    "oclusion en un destino de 640 o mas pasan la prueba de profundidad siempre. Separa un sol que no "
-                    "cubre pixeles de uno tapado por la profundidad. Cambia lo que ve el juego")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (testing only, build 150): colorless draws of an occlusion query on a target of "
+                    "640 or wider always pass the depth test. Tells apart a sun that covers no pixels from one "
+                    "hidden by depth. Changes what the game sees")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Occlusion draws always pass (test)");
 /*
  * This test has been answered: there is nothing to gain.
  *
@@ -550,23 +580,26 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_prueba_oclusion_siempre, false, "NFSMW",
  * that state; one of them was worth 2 ms and had been inactive for six builds.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_pase_sombras_sin_load, true, "NFSMW",
-                    "Renderizador nativo (prueba de FPS): abre el pase del mapa de sombras sin cargar su "
-                    "contenido previo (loadOp = DONT_CARE). Medido en la 112: no hay nada que ganar, el "
-                    "loadOp de la profundidad no se paga en esta GPU (el pase con 0 triangulos cuesta "
-                    "0,037 ms)");
+                    "Native renderer (FPS test): opens the shadow map pass without loading its previous contents "
+                    "(loadOp = DONT_CARE). Measured in build 112: nothing to gain, the depth loadOp is free on this "
+                    "GPU (the pass with 0 triangles costs 0.037 ms)")
+    .display_name("Shadow pass without load (test)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_omitir_sombras_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba): con N > 0 omite las sombras en los tramos impares "
-                     "de N segundos y anota cada cambio, para comparar capturas del mismo sitio");
+                     "Native renderer (test): with N > 0 skips the shadows in odd stretches of N seconds and logs "
+                     "each change, to compare captures of the same spot")
+    .display_name("Alternate skipping shadows (test, s)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_vertices_repetidos, false, "NFSMW",
-                    "Renderizador nativo (diagnostico): cuenta los bytes de vertices que repiten "
-                    "direccion, tamano y contenido en el mismo fotograma o respecto a uno anterior");
+                    "Native renderer (diagnostic): counts the vertex bytes that repeat address, size and contents "
+                    "within the same frame or against an earlier one")
+    .display_name("Repeated vertex data (diag)");
 // On the console, the vertex copy was ~3 of the ring thread's ~9 us per draw ("subidas" stage), and with the
 // game's busy-waits removed there are free cores.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_subidas_hilo, true, "NFSMW",
-                    "Renderizador nativo: las copias de vertices al bufer de subida las hace un hilo aparte "
-                    "mientras el hilo del anillo sigue grabando; se esperan antes de enviar el trabajo a la "
-                    "GPU y antes de devolver el puntero de lectura al juego")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: vertex copies to the upload buffer are done by a separate thread while the "
+                    "ring thread keeps recording; they are waited for before submitting work to the GPU and before "
+                    "returning the read pointer to the game")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Vertex copies on a thread");
 /*
  * The ring no longer waits for a copy thread that has no core (see EsperarSubidas).
  *
@@ -584,11 +617,12 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_subidas_hilo, true, "NFSMW",
  * waiting.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_subidas_hilo_prioridad, 0x2E, "NFSMW",
-                     "Renderizador nativo (26/09, build 187): prioridad del hilo de copias de vertices. 0x2E: por "
-                     "debajo del anillo (0x2D) y por encima del invitado (0x3A-0x3B), para que copie mientras el "
-                     "anillo graba. 0x3B = como hasta la 186")
+                     "Native renderer (build 187): priority of the vertex copy thread. 0x2E: below the ring (0x2D) "
+                     "and above the guest (0x3A-0x3B), so it copies while the ring records. 0x3B = as up to build "
+                     "186")
     .range(0x2C, 0x3B)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Vertex copy thread priority");
 /*
  * The copy thread on a different core from the ring. At the Heritage & Omega exit the thread only did 20 % of
  * the copies: the ring, with higher priority (0x2D) and at 94 %, did not leave it its core, and did them
@@ -597,10 +631,11 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_subidas_hilo_prioridad, 0x2E, "NFSMW",
  * core is set: the affinity mask is untouched and the kernel can still move it (same as the hash thread).
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_subidas_hilo_nucleo, -2, "NFSMW",
-                     "Renderizador nativo (26/09, build 191): nucleo preferido del hilo de copias de vertices. -2 = uno "
-                     "distinto del del anillo; -1 = sin preferencia (como hasta la 190); 0-2 = ese")
+                     "Native renderer (build 191): preferred core of the vertex copy thread. -2 = a different one "
+                     "from the ring's; -1 = no preference (as up to build 190); 0-2 = that core")
     .range(-2, 2)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Vertex copy thread core");
 /*
  * 16-bit indices with hand-written NEON (IndicesDe16). At one point the compiler stopped vectorizing that
  * loop (0 vector rev16 in Dibujar, 7 before) and the "indices" substage rose to 2.95 us per draw (the whole
@@ -609,23 +644,26 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_subidas_hilo_nucleo, -2, "NFSMW",
  * loop; on a DIFERENCIA the plain loop is kept for the session.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_indices_neon, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 187): los indices de 16 bits se copian y se miden (minimo y "
-                    "maximo) con NEON, 16 por vuelta. Mismo resultado (se comprueba sola). false = el bucle de siempre")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 187): 16-bit indices are copied and measured (minimum and maximum) with "
+                    "NEON, 16 per loop. Same result (checks itself). false = the usual loop")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("NEON index copy");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_subidas_ayuda, true, "NFSMW",
-                    "Renderizador nativo (26/09, build 185): cuando el hilo del anillo tiene que esperar las copias "
-                    "de vertices, copia el mismo las que el hilo de copias aun no ha empezado y espera la que este en "
-                    "curso con herencia de prioridad. Mismos datos (se comprueba sola). false = espera como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 185): when the ring thread has to wait for the vertex copies, it copies "
+                    "the ones the copy thread has not started yet itself, and waits for the one in progress with "
+                    "priority inheritance. Same data (checks itself). false = waits as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Ring helps with vertex copies");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_vacias_grises, false, "NFSMW",
-                    "Renderizador nativo: las texturas que aun no se soportan (cubo, 3D, "
-                    "formatos pendientes) se muestrean grises en vez de a cero (solo pruebas)");
+                    "Native renderer: textures not supported yet (cube, 3D, pending formats) sample as gray instead "
+                    "of zero (testing only)")
+    .display_name("Gray unsupported textures (test)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_inv_tamano_tex, true, "NFSMW",
-                    "Renderizador nativo (18/09, build 164): los shaders toman 1/tamano de textura de las "
-                    "constantes en vez de preguntarselo a la textura en cada muestreo con desplazamiento. Es "
-                    "la misma cuenta con el mismo numero: la imagen no cambia. Necesita una biblioteca de "
-                    "shaders regenerada con el ayudante nuevo");
+                    "Native renderer (build 164): shaders take 1/texture size from the constants instead of asking "
+                    "the texture on every offset sample. Same math with the same number: the image does not change. "
+                    "Needs a shader library regenerated with the new helper")
+    .display_name("Texture 1/size from constants");
 /*
  * Enabled by default: a single texel instead of the 3x3, measured and long enabled in a local toml. Three
  * cvars were only enabled through a local toml, and the toml overrides the default: shipping without that
@@ -640,11 +678,11 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_inv_tamano_tex, true, "NFSMW",
  * PCF is enabled by default again.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_pcf_barato, true, "NFSMW",
-                    "Renderizador nativo (20/09): un solo muestreo del mapa de sombras en vez del patron "
-                    "3x3 a medio texel. El humo (p_000101) hace once por pixel en rectangulos de pantalla "
-                    "completa y es el 21 % de la escena. El borde de la sombra queda algo menos suave "
-                    "(25/09, build 183: true por defecto otra vez; las bandas de las paredes eran acne y las "
-                    "quita el desplazamiento de profundidad). Necesita la biblioteca de shaders regenerada");
+                    "Native renderer: a single shadow map sample instead of the 3x3 pattern at half a texel. The "
+                    "smoke (p_000101) takes eleven per pixel over full-screen rectangles and is 21 % of the scene. "
+                    "The shadow edge is a little less soft (build 183: on by default again; the bands on walls were "
+                    "acne, and the depth bias removes them). Needs the regenerated shader library")
+    .display_name("Cheap shadow filtering");
 
 /*
  * Anisotropic filtering, beyond the Xbox 360 (nfsmw_nativo_anisotropico).
@@ -660,11 +698,12 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_pcf_barato, true, "NFSMW",
 // 0 by default. At 8x it did not remove the streaks on the alley doors, and the scene went up ~2 ms of GPU
 // time together with the 9 shadow samples.
 REXCVAR_DEFINE_INT32(nfsmw_nativo_anisotropico, 0, "NFSMW",
-                     "Renderizador nativo (25/09, build 179): filtrado anisotropico de las texturas del mundo "
-                     "(samplers lineales con mips). 0 = como la Xbox 360 (trilineal, borroso de lado y a "
-                     "distancia); 2, 4, 8 o 16 = mas nitido, con coste de GPU")
+                     "Native renderer (build 179): anisotropic filtering of world textures (linear samplers with "
+                     "mips). 0 = as on the Xbox 360 (trilinear, blurry at angles and in the distance); 2, 4, 8 or 16 "
+                     "= sharper, at a GPU cost")
     .range(0, 16)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Anisotropic filtering");
 
 /*
  * Alley door diagnostic (nfsmw_nativo_diag_mip_minimo).
@@ -690,20 +729,22 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_anisotropico, 0, "NFSMW",
  * behaviour.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_sombras_sesgo_pendiente, 20, "NFSMW",
-                     "Renderizador nativo (25/09, build 181): desplazamiento de profundidad por pendiente en el mapa de "
-                     "sombras, en decimas (20 = 2,0). Quita el acne (rejilla de puntos en diagonal en paredes y puertas "
-                     "de garaje). Demasiado alto despega las sombras de los objetos. 0 = como antes. Se cambia en marcha")
-    .range(0, 100);
+                     "Native renderer (build 181): slope-scaled depth bias in the shadow map, in tenths (20 = 2.0). "
+                     "Removes acne (a diagonal dot grid on walls and garage doors). Too high detaches shadows from "
+                     "objects. 0 = as before. Changes live")
+    .range(0, 100)
+    .display_name("Shadow slope bias");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_sombras_sesgo_constante, 0, "NFSMW",
-                     "Renderizador nativo (25/09, build 181): desplazamiento de profundidad constante en el mapa de "
-                     "sombras, en miles de unidades de 24 bits (1 = 1000). 0 = sin constante. Se cambia en marcha")
-    .range(0, 100);
+                     "Native renderer (build 181): constant depth bias in the shadow map, in thousands of 24-bit "
+                     "units (1 = 1000). 0 = no constant bias. Changes live")
+    .range(0, 100)
+    .display_name("Shadow constant bias");
 
 REXCVAR_DEFINE_INT32(nfsmw_nativo_diag_mip_minimo, 0, "NFSMW",
-                     "Diagnostico (25/09, build 180): las texturas con mips empiezan N niveles mas abajo, tambien de "
-                     "cerca, para ver si sus niveles de mip estan bien. 0 = normal; 1, 2 o 3 para mirar. Se cambia en "
-                     "marcha")
-    .range(0, 4);
+                     "Diagnostic (build 180): textures with mips start N levels lower, even up close, to see whether "
+                     "their mip levels are right. 0 = normal; 1, 2 or 3 to inspect. Changes live")
+    .range(0, 4)
+    .display_name("Force lower mip (diag)");
 /*
  * Splitting the frame into two submissions.
  *
@@ -722,27 +763,32 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_diag_mip_minimo, 0, "NFSMW",
  * stays so the test can be repeated.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_enviar_tras_sombras, false, "NFSMW",
-                    "Renderizador nativo (20/09): enviar el trabajo a la GPU en cuanto se cierra el pase de "
-                    "sombras, en vez de todo junto al final del fotograma. La GPU deja de estar parada "
-                    "esperando a que la CPU acabe de grabar");
+                    "Native renderer: submit work to the GPU as soon as the shadow pass closes, instead of all "
+                    "together at the end of the frame. The GPU no longer sits idle waiting for the CPU to finish "
+                    "recording")
+    .display_name("Submit after shadow pass");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_pcf_barato_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (20/09): con N > 0 alterna cada N segundos el muestreo del mapa de "
-                     "sombras entre el patron 3x3 y un solo texel, y lo anota. Sirve para medirlo A/B en la "
-                     "MISMA carrera: comparar entre carreras distintas no vale porque el tramo cambia");
+                     "Native renderer: with N > 0 alternates the shadow map sampling between the 3x3 pattern and a "
+                     "single texel every N seconds, and logs it. Used to measure it A/B within the SAME race: "
+                     "comparing different races is not valid because the stretch changes")
+    .display_name("Alternate shadow filtering (test, s)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_inv_tamano_tex_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 164): con N > 0 alterna cada N segundos tomar "
-                     "1/tamano de las constantes o preguntarselo a la textura");
+                     "Native renderer (test, build 164): with N > 0 alternates every N seconds between taking 1/size "
+                     "from the constants and asking the texture")
+    .display_name("Alternate texture 1/size (test, s)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_estadisticas_por_dibujo_s, 0, "NFSMW",
-                     "Renderizador nativo (diagnostico, build 159): con N > 0 mide un fotograma de cada N "
-                     "segundos con una consulta por dibujo y reparte los fragmentos por pixel shader");
+                     "Native renderer (diagnostic, build 159): with N > 0 measures one frame every N seconds with "
+                     "one query per draw and splits the fragments by pixel shader")
+    .display_name("Per-draw statistics (diag, s)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_prueba_tijera, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 159): recorta a 1x1 los dibujos de una categoria "
-                     "(1 sombras, 2 escena, 3 cubo, 4 posproceso). Se manda todo el estado y todos los "
-                     "dibujos pero no se sombrea: la diferencia de tiempo es el suelo por dibujo. ROMPE LA "
-                     "IMAGEN mientras esta puesta: solo para medir");
+                     "Native renderer (test, build 159): scissors the draws of one category to 1x1 (1 shadows, 2 "
+                     "scene, 3 cube, 4 post-processing). All state and draws are still sent but nothing is shaded: "
+                     "the time difference is the per-draw floor. BREAKS THE IMAGE while set: for measuring only")
+    .display_name("Scissor a draw category (test)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_prueba_tijera_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 159): con N > 0 alterna cada N segundos la tijera "
-                     "de nfsmw_nativo_prueba_tijera");
+                     "Native renderer (test, build 159): with N > 0 alternates the nfsmw_nativo_prueba_tijera "
+                     "scissor every N seconds")
+    .display_name("Alternate scissor test (s)");
 /*
  * Separating the texture unit from the ALU (scene pass analysis).
  *
@@ -753,14 +799,15 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_prueba_tijera_alternar_s, 0, "NFSMW",
  * away: for measurement only.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_prueba_mip_puntual, false, "NFSMW",
-                    "Renderizador nativo (prueba, 21/09): el filtro ENTRE niveles de mip pasa de lineal a "
-                    "puntual (trilineal -> bilineal). La TMU hace la mitad de trabajo y la ALU no cambia: "
-                    "si la escena baja manda el muestreo, si no se mueve manda la ALU. Se ve el salto de "
-                    "mip al alejarse: solo para medir");
+                    "Native renderer (test): filtering BETWEEN mip levels changes from linear to point (trilinear -> "
+                    "bilinear). The TMU does half the work and the ALU is unchanged: if the scene gets faster, "
+                    "sampling is the bottleneck; if not, the ALU is. The mip switch is visible when moving away: for "
+                    "measuring only")
+    .display_name("Point mip filtering (test)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_prueba_mip_puntual_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, 21/09): con N > 0 alterna cada N segundos "
-                     "nfsmw_nativo_prueba_mip_puntual (los dos samplers conviven en la cache, no hay "
-                     "parones al cambiar)");
+                     "Native renderer (test): with N > 0 alternates nfsmw_nativo_prueba_mip_puntual every N seconds "
+                     "(both samplers live in the cache, so switching does not stall)")
+    .display_name("Alternate point mip filtering (test, s)");
 /*
  * Do not upload the same vertices twice in the same frame.
  *
@@ -780,8 +827,9 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_prueba_mip_puntual_alternar_s, 0, "NFSMW",
  * If geometry ever looks stuck or stretched, this is the first thing to disable.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_dedupe_vertices, true, "NFSMW",
-                    "Renderizador nativo (21/09): si dos dibujos del mismo fotograma piden el mismo rango de "
-                    "vertices, se sube una sola vez. El informe C6 anota aciertos y MB ahorrados");
+                    "Native renderer: if two draws in the same frame ask for the same vertex range, it is uploaded "
+                    "only once. The C6 report logs hits and MB saved")
+    .display_name("Deduplicate vertex uploads");
 
 /*
  * No vkCmdBindVertexBuffers in single-binding draws.
@@ -808,17 +856,20 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_dedupe_vertices, true, "NFSMW",
  * if anything looked wrong, nfsmw_nativo_vertices_base_cero = false restores the usual path.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_vertices_base_cero, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): en los dibujos de un solo enlace de vertices, el bufer de "
-                    "subida se queda enlazado en 0 y el dibujo se desplaza con vertexOffset/firstVertex, sin un "
-                    "vkCmdBindVertexBuffers por dibujo. La GPU lee los mismos bytes. false = como antes");
+                    "Native renderer (build 179): for draws with a single vertex binding, the upload buffer stays "
+                    "bound at 0 and the draw is offset with vertexOffset/firstVertex, without a "
+                    "vkCmdBindVertexBuffers per draw. The GPU reads the same bytes. false = as before")
+    .display_name("Single vertex buffer binding");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_ps_solo_alfa, true, "NFSMW",
-                    "Renderizador nativo (18/09, build 158): en las pasadas sin destino de color, compila el "
-                    "pixel shader sin las escrituras de color. La imagen no cambia (Vulkan las descarta) y el "
-                    "driver borra por muerto lo que solo alimentaba el color: queda la prueba de alfa");
+                    "Native renderer (build 158): in passes without a color target, compiles the pixel shader "
+                    "without the color writes. The image does not change (Vulkan discards them) and the driver "
+                    "removes as dead code what only fed the color: the alpha test remains")
+    .display_name("Alpha-only pixel shaders");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_ps_solo_alfa_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 158): con N > 0 alterna cada N segundos compilar el "
-                     "pixel shader con y sin las escrituras de color en las pasadas sin color");
+                     "Native renderer (test, build 158): with N > 0 alternates every N seconds compiling the pixel "
+                     "shader with and without color writes in colorless passes")
+    .display_name("Alternate alpha-only shaders (test, s)");
 
 /*
  * Depth test before shading, where it can be done without changing the image.
@@ -847,14 +898,15 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_ps_solo_alfa_alternar_s, 0, "NFSMW",
  * depth: that second figure is the exact size of what only a depth pre-pass would solve.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_z_temprana, true, "NFSMW",
-                    "Renderizador nativo (20/09): en los dibujos que prueban la profundidad pero NO la "
-                    "escriben (humo, particulas, cristales, calcomanias), declarar EarlyFragmentTests en el "
-                    "pixel shader para que la GPU pruebe la profundidad ANTES de sombrear en vez de despues. "
-                    "Sin esto, cualquier shader con prueba de alfa o kill sombrea todos sus fragmentos "
-                    "aunque queden tapados. La imagen es identica: no hay escritura de Z que adelantar");
+                    "Native renderer: in draws that test depth but do NOT write it (smoke, particles, glass, "
+                    "decals), declare EarlyFragmentTests in the pixel shader so the GPU tests depth BEFORE shading "
+                    "instead of after. Without this, any shader with an alpha test or kill shades all its fragments "
+                    "even when hidden. The image is identical: there is no Z write to move earlier")
+    .display_name("Early depth test");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_z_temprana_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, 20/09): con N > 0 alterna cada N segundos la prueba de "
-                     "profundidad temprana, para medirla A/B en la MISMA carrera");
+                     "Native renderer (test): with N > 0 alternates the early depth test every N seconds, to measure "
+                     "it A/B within the SAME race")
+    .display_name("Alternate early depth test (test, s)");
 /*
  * The sky is drawn first and shades the whole screen for nothing.
  *
@@ -910,10 +962,11 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_z_temprana_alternar_s, 0, "NFSMW",
  * cannot break the image; at worst it does nothing.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_cielo_aplazado, true, "NFSMW",
-                    "Renderizador nativo (22/09): aplazar el dibujo del cielo hasta despues de los opacos "
-                    "del mismo pase, en vez de dibujarlo el primero sobre un Z-buffer vacio. Es un solo "
-                    "dibujo opaco que prueba la profundidad y no la escribe, asi que la imagen es identica: "
-                    "lo que hoy se sobreescribe, manana lo descarta la prueba de profundidad");
+                    "Native renderer: defer the sky draw until after the opaque draws of the same pass, instead of "
+                    "drawing it first over an empty Z-buffer. It is a single opaque draw that tests depth without "
+                    "writing it, so the image is identical: what is overwritten today is discarded by the depth test "
+                    "instead")
+    .display_name("Draw sky after opaques");
 /*
  * Draws that paint nothing and are still shaded.
  *
@@ -929,52 +982,61 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_cielo_aplazado, true, "NFSMW",
  * the blending and the write.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_saltar_invisibles, true, "NFSMW",
-                    "Renderizador nativo (20/09): saltarse los dibujos que no pueden cambiar ni un pixel "
-                    "(mezcla que copia el destino, o prueba de alfa con la funcion NUNCA). La imagen es "
-                    "identica por definicion");
+                    "Native renderer: skip draws that cannot change a single pixel (blending that copies the target, "
+                    "or an alpha test with the NEVER function). The image is identical by definition")
+    .display_name("Skip invisible draws");
 /*
  * Small per-draw savings on the ring thread. Each has its own cvar; the first three have a self-checking
  * guard (the first 200,000 cases, then 1 in 4,096, also go through the usual path and are compared; on a
  * difference, DIFERENCIA in the log and the saving is switched off).
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_encuadre_cache, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): el viewport, el ndc y la tijera de un dibujo se reutilizan "
-                    "mientras no cambien los registros del encuadre (su generacion) ni el pase. Se comprueba sola. "
-                    "false = se calculan en cada dibujo, como antes");
+                    "Native renderer (build 179): a draw's viewport, NDC and scissor are reused while the viewport "
+                    "registers (their generation) and the pass do not change. Checks itself. false = computed on "
+                    "every draw, as before")
+    .display_name("Cache viewport and scissor");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_alto_util_memo, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): el alto util del destino se apunta en el elemento del mapa "
-                    "del ultimo pitch, sin buscarlo en cada dibujo. Se comprueba sola. false = como antes");
+                    "Native renderer (build 179): the target's used height is stored in the map entry of the last "
+                    "pitch instead of being looked up on every draw. Checks itself. false = as before")
+    .display_name("Remember target used height");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_clave_pase_rapida, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): si los destinos de un dibujo son los mismos bytes que los "
-                    "del pase abierto no se recalcula su XXH3. Se comprueba sola. false = XXH3 en cada dibujo");
+                    "Native renderer (build 179): if a draw's targets are the same bytes as the open pass's, their "
+                    "XXH3 is not recomputed. Checks itself. false = XXH3 on every draw")
+    .display_name("Fast pass key");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_cvars_por_fotograma, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): nfsmw_nativo_ps_solo_alfa y nfsmw_nativo_sin_ps_sin_color "
-                    "(y sus alternancias) se leen una vez por fotograma y no en cada dibujo sin color. false = como "
-                    "antes");
+                    "Native renderer (build 179): nfsmw_nativo_ps_solo_alfa and nfsmw_nativo_sin_ps_sin_color (and "
+                    "their alternations) are read once per frame instead of on every colorless draw. false = as "
+                    "before")
+    .display_name("Read draw settings once per frame");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_sin_ps_sin_color_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (prueba, build 157): con N > 0 alterna cada N segundos montar el "
-                     "pipeline con y sin etapa de fragmentos en los dibujos sin color, para comparar capturas "
-                     "del mismo sitio con el juego en pausa");
+                     "Native renderer (test, build 157): with N > 0 alternates every N seconds building the pipeline "
+                     "with and without a fragment stage for colorless draws, to compare captures of the same spot "
+                     "with the game paused")
+    .display_name("Alternate no-fragment pipelines (test, s)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_sin_ps_sin_color, true, "NFSMW",
-                    "Renderizador nativo (17/09, build 157): en los dibujos que no escriben ningun color, "
-                    "monta el pipeline sin etapa de fragmentos si el pixel shader no puede descartar pixeles "
-                    "ni escribe profundidad. La imagen no cambia y la GPU no sombrea (mapa de sombras)");
+                    "Native renderer (build 157): for draws that write no color, builds the pipeline without a "
+                    "fragment stage if the pixel shader cannot discard pixels or write depth. The image does not "
+                    "change and the GPU does no shading (shadow map)")
+    .display_name("No fragment stage for colorless draws");
 REXCVAR_DEFINE_STRING(nfsmw_nativo_diag_omitir_ps, "", "NFSMW",
-                      "Renderizador nativo: numeros de PS separados por comas cuyos dibujos no "
-                      "se graban (solo pruebas, para localizar un dibujo)");
+                      "Native renderer: comma-separated PS numbers whose draws are not recorded (testing only, to "
+                      "locate a draw)")
+    .display_name("Skip pixel shaders (test)");
 // A review of other Switch projects found that in NVK for Tegra the memory type the SDK picks for uploads
 // (without HOST_CACHED) is an NvMap without CPU caching, and wine-nx measured on the console that writing
 // there is slow. All vertex copies go to this buffer, so it can be chosen for an A/B test.
 REXCVAR_DEFINE_INT32(nfsmw_nativo_subida_memoria, 0, "NFSMW",
-                     "Renderizador nativo: memoria del bufer de subida. 0 = la que elige el SDK (en la Switch, sin "
-                     "cache de CPU), 1 = con cache de CPU (se publica con vkFlushMappedMemoryRanges antes de "
-                     "enviar), 2 = sin cache de CPU")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                     "Native renderer: memory of the upload buffer. 0 = the one the SDK chooses (on Switch, "
+                     "uncached), 1 = CPU-cached (published with vkFlushMappedMemoryRanges before submitting), 2 = "
+                     "uncached")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Upload buffer memory type");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_compartidas_cache, true, "NFSMW",
-                    "Renderizador nativo (23/09, build 156): las constantes compartidas de cada dibujo (488 bytes) "
-                    "en un bufer pequeno CON cache de CPU, aparte del de subida. Medido en la 155: escribirlas sin "
-                    "cache costaba 2,0 us por dibujo y con cache 0,4. Solo con las constantes por UBO")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 156): each draw's shared constants (488 bytes) go in a small CPU-cached "
+                    "buffer, separate from the upload buffer. Measured in build 155: writing them uncached cost 2.0 "
+                    "us per draw, cached 0.4. Only with constants via UBO")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Cached shared constants");
 /*
  * Direct-mapped pipeline cache.
  *
@@ -992,8 +1054,9 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_compartidas_cache, true, "NFSMW",
  * as before.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_pipelines_directa, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): cache directa de 256 pipelines delante del mapa de "
-                    "PipelineDe. Mismo resultado que el mapa (se comprueba sola). false = solo el mapa, como antes");
+                    "Native renderer (build 179): a 256-entry direct cache in front of the PipelineDe map. Same "
+                    "result as the map (checks itself). false = only the map, as before")
+    .display_name("Direct pipeline cache");
 /*
  * Measurement only, it changes no draw. What changes at each vkCmdBindPipeline of the ring: shaders, vertex
  * input, formats, specialization, or only fixed pipeline state (blending, masks, Z, stencil, cull face,
@@ -1002,8 +1065,9 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_pipelines_directa, true, "NFSMW",
  */
 // Disabled by default: it was only a measurement and it has already produced its data.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_contar_cambios_pipeline, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): cuenta que cambia en cada vkCmdBindPipeline (solo "
-                    "medida, no cambia ningun dibujo). Lineas C6 cambios de pipeline cada 20 s. false = no se cuenta");
+                    "Native renderer (build 184): counts what changes on each vkCmdBindPipeline (measurement only, "
+                    "changes no draw). 'C6 cambios de pipeline' lines every 20 s. false = not counted")
+    .display_name("Count pipeline changes (diag)");
 /*
  * Dynamic state, phase 0a. A draw's pipeline is looked up with its key in canonical form (Canonizar):
  * whatever PipelineDe does not read, or reads but Vulkan ignores (the blend equation without blendEnable,
@@ -1016,9 +1080,10 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_contar_cambios_pipeline, false, "NFSMW",
  */
 // Disabled by default. Measured: PipelineDe got more expensive and no avoidable bind was measured.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_clave_canonica, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): el pipeline se busca con la clave en forma canonica (solo "
-                    "lo que Vulkan mira): menos pipelines y menos vkCmdBindPipeline. Se comprueba sola. false = la "
-                    "clave de siempre");
+                    "Native renderer (build 184): pipelines are looked up with the key in canonical form (only what "
+                    "Vulkan looks at): fewer pipelines and fewer vkCmdBindPipeline. Checks itself. false = the usual "
+                    "key")
+    .display_name("Canonical pipeline key");
 /*
  * Dynamic state, phase 0b. EmpezarPase no longer forgets the bound pipeline. Vulkan keeps the binding and
  * the dynamic state across passes of the same command buffer, and NVK only marks state as dirty when a pass
@@ -1028,9 +1093,9 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_clave_canonica, false, "NFSMW",
  * after starting a pass"). false = forgotten at every pass, as before.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_pipeline_entre_pases, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): el pipeline enlazado se conserva al empezar un pase del "
-                    "mismo bufer de comandos (Vulkan lo conserva). false = se vuelve a enlazar en cada pase, como "
-                    "antes");
+                    "Native renderer (build 184): the bound pipeline is kept when a pass starts in the same command "
+                    "buffer (Vulkan keeps it). false = rebound on every pass, as before")
+    .display_name("Keep pipeline across passes");
 /*
  * Dynamic state, phase 1 (EDS1/EDS2, core in Vulkan 1.3; the console reports API 1.3.354). Cull mode, front
  * face, topology (within its class), Z test, write and function, stencil with its operations, depth bias
@@ -1046,9 +1111,10 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_pipeline_entre_pases, true, "NFSMW",
 // Disabled by default. Measured: each BindPipeline went from 2.95 to 4.36 us and PipelineDe from 0.21 to
 // 0.47 us per draw, for only 13 % fewer binds: a net loss of ~1 ms of ring time per frame.
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_estado_dinamico, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): cara, frente, topologia, Z, estencil, sesgo y reinicio "
-                    "con vkCmdSet* (EDS1/EDS2 de Vulkan 1.3) en vez de en el pipeline: menos vkCmdBindPipeline. Se "
-                    "comprueba sola. false = todo en el pipeline, como antes");
+                    "Native renderer (build 184): cull mode, front face, topology, Z, stencil, bias and primitive "
+                    "restart with vkCmdSet* (EDS1/EDS2 from Vulkan 1.3) instead of in the pipeline: fewer "
+                    "vkCmdBindPipeline. Checks itself. false = all in the pipeline, as before")
+    .display_name("Dynamic state (EDS1/2)");
 /*
  * Dynamic state, phase 2 (VK_EXT_extended_dynamic_state3; NVK exposes it on Maxwell and the SDK enables it
  * with ui_vulkan_estado_dinamico3.patch). Blending (blendEnable), its equation and each target's color mask
@@ -1058,13 +1124,15 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_estado_dinamico, false, "NFSMW",
  */
 // Disabled by default, for the same measured reason as nfsmw_nativo_estado_dinamico (it goes with it).
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_estado_dinamico3, false, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): mezcla, ecuacion y mascara de color con vkCmdSet* "
-                    "(VK_EXT_extended_dynamic_state3) en vez de en el pipeline. Se comprueba sola. false = en el "
-                    "pipeline, como antes");
+                    "Native renderer (build 184): blending, blend equation and color mask with vkCmdSet* "
+                    "(VK_EXT_extended_dynamic_state3) instead of in the pipeline. Checks itself. false = in the "
+                    "pipeline, as before")
+    .display_name("Dynamic state 3 (blend)");
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_diag_memoria_subida, true, "NFSMW",
-                    "Renderizador nativo: al crear el bufer de subida mide una vez cuantos MB/s se escriben desde la "
-                    "CPU en cada tipo de memoria visible (8 MB) y cuanto cuesta publicarlos")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer: when the upload buffer is created, measures once how many MB/s the CPU writes "
+                    "into each visible memory type (8 MB) and how much it costs to publish them")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Upload memory benchmark (diag)");
 
 // The 30 FPS guard lives in nfsmw_recorte_sombras.cpp, which owns the lever.
 namespace nfsmw::guardia30 {
@@ -1226,10 +1294,11 @@ void AplicarTratamientoVisual(float* c, int modo) {
  * first frame never clips too much.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_pase_area_util, true, "NFSMW",
-                    "Renderizador nativo (20/09): abrir cada pase sobre el rectangulo que el juego usa de "
-                    "verdad en vez de sobre la imagen entera. El alto de los destinos se deduce del pitch, "
-                    "asi que la escena abre 1280x1280 para dibujar 1280x720 y el cubo 320x720 para dibujar "
-                    "320x256. La imagen es identica: Vulkan solo carga y guarda el renderArea");
+                    "Native renderer: open each pass over the rectangle the game really uses instead of the whole "
+                    "image. Target height is deduced from the pitch, so the scene opens 1280x1280 to draw 1280x720 "
+                    "and the cube 320x720 to draw 320x256. The image is identical: Vulkan only loads and stores the "
+                    "renderArea")
+    .display_name("Passes over the used area");
 constexpr uint64_t kHuellaBrightPass = 0xE849A9F6D3323B87ull;
 /*
  * The pixel shader of the sky dome (nfsmw_nativo_cielo_aplazado).
@@ -10381,7 +10450,7 @@ class DibujosVulkanImpl final : public DibujosVulkan {
     return modulos_variantes_[indice];
   }
 
-  // nfsmw_resplandor_cielo (F4 menu, Graficos: 0 original, 1 natural, 2 soft), or its test rotation; logs
+  // nfsmw_resplandor_cielo (F4 menu, Graphics: 0 original, 1 natural, 2 soft), or its test rotation; logs
   // every change.
   int ResplandorCielo() {
     int modo = nfsmw::ajustes::ResplandorCielo();

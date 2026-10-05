@@ -41,8 +41,9 @@
 #include "nfsmw_audio_nativo.h"
 
 REXCVAR_DEFINE_BOOL(nfsmw_audio_diag_funciones, false, "NFSMW",
-                    "Diagnostico: tiempo propio, tiempo inclusivo y llamadas de las funciones del motor de sonido del "
-                    "juego en el hilo servidor de audio, con un resumen cada 10 s en el log");
+                    "Diagnostic: self time, inclusive time and call counts of the game's sound engine functions on "
+                    "the audio server thread, with a summary in the log every 10 s")
+    .display_name("Audio function timing (diag)");
 
 namespace nfsmw::hilos {
 // nfsmw_hilos_switch.cpp

@@ -106,21 +106,23 @@ std::string Resumen();
 #endif
 
 REXCVAR_DEFINE_STRING(nfsmw_renderizador, "xenos", "NFSMW",
-                      "xenos = emulacion de la GPU; nativo = renderizador nativo en desarrollo "
-                      "(pieza C1: el juego corre sin emulacion y la pantalla muestra un color de "
-                      "prueba)")
+                      "Xenos = GPU emulation; Native = native renderer (the one the port uses)")
     .allowed({"xenos", "nativo"})
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .labels({{"xenos", "Xenos (emulation)"}, {"nativo", "Native"}})
+    .display_name("Renderer");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_registros_vectoriales, true, "NFSMW",
-                    "Renderizador nativo (24/09, build 164): los bloques de registros del anillo se copian de 4 en 4 "
-                    "con NEON. Los primeros 200.000 bloques se comprueban contra el camino de siempre y, si uno "
-                    "difiere, se apaga solo. false = el camino de siempre")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 164): the ring's register blocks are copied 4 at a time with NEON. The "
+                    "first 200,000 blocks are checked against the usual path and, if one differs, it turns itself "
+                    "off. false = the usual path")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("NEON register block copy");
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_registros_en_bloque, true, "NFSMW",
-                    "Renderizador nativo: los bloques de registros sin efectos (casi siempre constantes de VS y PS) "
-                    "se escriben de una vez en vez de registro a registro (build 130). false: como antes");
+                    "Native renderer: register blocks without side effects (almost always VS and PS constants) are "
+                    "written at once instead of register by register (build 130). false: as before")
+    .display_name("Write register blocks at once");
 
 /*
  * The report is written from the ring thread, and that causes real stutters.
@@ -143,10 +145,11 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_registros_en_bloque, true, "NFSMW",
  * the whole block: see the next comment.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_informe_s, 20, "NFSMW",
-                     "Renderizador nativo: segundos entre volcados del informe de diagnostico. Cada volcado "
-                     "lo escribe el hilo que alimenta a la GPU y cuesta tirones: 10 da el doble de detalle y "
-                     "el doble de tirones por esta causa")
-    .range(5, 120);
+                     "Native renderer: seconds between dumps of the diagnostic report. Each dump is written by the "
+                     "thread that feeds the GPU and causes stutters: 10 gives twice the detail and twice the "
+                     "stutters from this cause")
+    .range(5, 120)
+    .display_name("Diagnostic report interval (s)");
 
 /*
  * The dump is written on another thread.
@@ -166,10 +169,11 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_informe_s, 20, "NFSMW",
  * false = as before: the ring writes every line itself.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_informes_diferidos, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 179): el informe periodico y las lineas [tiron] del hilo del "
-                    "anillo se escriben en la SD desde un hilo aparte; el anillo solo las formatea y las encola. "
-                    "false = como antes, las escribe el propio anillo (29-32 ms cada 20 s en la 176)")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 179): the periodic report and the ring thread's [tiron] lines are "
+                    "written to the SD card from a separate thread; the ring only formats and queues them. false = "
+                    "as before, the ring writes them itself (29-32 ms every 20 s in build 176)")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Write reports on a thread");
 
 /*
  * IM_LOAD without memcmp. On every IM_LOAD the ring compared the whole microcode with guest memory (~0.6 us,
@@ -180,11 +184,12 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_informes_diferidos, true, "NFSMW",
 #include "nfsmw_microcodigo_versiones.h"
 
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_im_load_sin_memcmp, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): un IM_LOAD cuyo microcodigo no ha escrito nadie desde la "
-                    "ultima comprobacion (lo avisan los constructores y el parcheador de los fetch del D3D) se toma de "
-                    "la cache sin compararlo entero con memcmp. Empieza comprobando cada carga contra el memcmp y se "
-                    "apaga solo al primer desacuerdo. false = memcmp en cada IM_LOAD, como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 184): an IM_LOAD whose microcode nobody has written since the last check "
+                    "(the constructors and the D3D fetch patcher report writes) is taken from the cache without "
+                    "comparing it whole with memcmp. Starts by checking every load against memcmp and turns itself "
+                    "off at the first disagreement. false = memcmp on every IM_LOAD, as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("IM_LOAD without memcmp");
 
 /*
  * IM_LOAD_IMMEDIATE with an exact cache. sub_825A37D8 (D3D) copies the VS into the ring itself with the
@@ -194,12 +199,13 @@ REXCVAR_DEFINE_BOOL(nfsmw_nativo_im_load_sin_memcmp, true, "NFSMW",
  * identification, its fingerprint and its generation. The self-checking guard is in CargarInmediato.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_im_inmediato_cache, true, "NFSMW",
-                    "Renderizador nativo (25/09, build 184): un IM_LOAD_IMMEDIATE (el VS que el D3D copia en el anillo "
-                    "con los fetch parcheados) identico byte a byte a uno ya visto reutiliza su copia girada, su "
-                    "identificacion, su huella y su generacion, sin girar ni identificar otra vez. Empieza comprobando "
-                    "cada acierto contra el camino de siempre y se apaga solo al primer desacuerdo. false = sin cache, "
-                    "como antes")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Native renderer (build 184): an IM_LOAD_IMMEDIATE (the VS the D3D copies into the ring with "
+                    "patched fetches) that is byte-identical to one already seen reuses its swapped copy, "
+                    "identification, hash and generation, without swapping or identifying it again. Starts by "
+                    "checking every hit against the usual path and turns itself off at the first disagreement. false "
+                    "= no cache, as before")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("IM_LOAD_IMMEDIATE cache");
 
 // Game frames, one per Swap (nfsmw_d3d_trace.cpp). Only for the AnotarJuegoPorDelante measurement.
 extern std::atomic<uint64_t> g_nfsmw_fotogramas_juego;
@@ -317,10 +323,10 @@ void InformeDiferido(std::string linea) {
  * presenter went without a core 70 % of the time.
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_anillo_prioridad, 0x2D, "NFSMW",
-                     "Switch: prioridad de Horizon del hilo del anillo (0x1C-0x3B). 0x2D por "
-                     "defecto, un escalon por debajo del presentador (0x2C) y dos por debajo del "
-                     "audio (0x2B). Subirlo a 0x2C devuelve el reparto de la compilacion 113, en el "
-                     "que solo llegaba a la pantalla la mitad de los fotogramas");
+                     "Switch: Horizon priority of the ring thread (0x1C-0x3B). 0x2D by default, one step below the "
+                     "presenter (0x2C) and two below audio (0x2B). Raising it to 0x2C brings back the split of build "
+                     "113, in which only half the frames reached the screen")
+    .display_name("Ring thread priority");
 /*
  * Which core the ring starts on.
  *
@@ -341,9 +347,10 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_anillo_prioridad, 0x2D, "NFSMW",
  * thread is on. Measured: the migrations are the same with -1 and with 1 (see the next comment).
  */
 REXCVAR_DEFINE_INT32(nfsmw_nativo_anillo_nucleo, 1, "NFSMW",
-                     "Switch: nucleo preferido del hilo del anillo (-1 = el de por defecto, que es el "
-                     "mismo que el del hilo del juego; 0-2 = uno concreto). No es exclusivo: la "
-                     "mascara no se toca, asi que el kernel puede moverlo igual");
+                     "Switch: preferred core of the ring thread (-1 = the default, which is the same as the game "
+                     "thread's; 0-2 = a specific one). Not exclusive: the affinity mask is left alone, so the kernel "
+                     "can still move it")
+    .display_name("Ring thread core");
 /*
  * The real pin.
  *
@@ -365,45 +372,53 @@ REXCVAR_DEFINE_INT32(nfsmw_nativo_anillo_nucleo, 1, "NFSMW",
  * and the log says whether migrations drop to zero.
  */
 REXCVAR_DEFINE_BOOL(nfsmw_nativo_anillo_nucleo_exclusivo, false, "NFSMW",
-                    "Switch: ademas de preferir el nucleo de nfsmw_nativo_anillo_nucleo, PROHIBE los "
-                    "demas (mascara exclusiva). Es el pin de verdad. Ojo: si ese nucleo se satura, el "
-                    "anillo se queda sin correr; mira las migraciones/s del log, que deben caer a 0");
+                    "Switch: besides preferring the core in nfsmw_nativo_anillo_nucleo, FORBIDS the others "
+                    "(exclusive mask). This is the real pin. Careful: if that core saturates, the ring does not get "
+                    "to run; check the migrations/s in the log, which should drop to 0")
+    .display_name("Pin ring thread to its core");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_espera_regmem_us, 1000, "NFSMW",
-                     "Renderizador nativo: pausa entre sondeos de WAIT_REG_MEM en microsegundos (en la "
-                     "Switch es exacta; en Windows, por debajo de 1000 solo se cede el turno)");
+                     "Native renderer: pause between WAIT_REG_MEM polls in microseconds (exact on Switch; on "
+                     "Windows, below 1000 it only yields)")
+    .display_name("WAIT_REG_MEM poll interval (us)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_diag_fotograma_s, 0, "NFSMW",
-                     "Renderizador nativo: pasados estos segundos, anota en el log cada dibujo y "
-                     "cada copia de un fotograma entero (0 = no; solo pruebas)");
+                     "Native renderer: after this many seconds, logs every draw and copy of one whole frame (0 = no; "
+                     "testing only)")
+    .display_name("Trace one frame after N s (test)");
 REXCVAR_DEFINE_STRING(nfsmw_nativo_diag_vertices_ps, "", "NFSMW",
-                      "Renderizador nativo: en el fotograma trazado, para los dibujos con estos PS "
-                      "(numeros separados por comas) anota los fetch del VS y los bytes de sus "
-                      "primeros vertices y texels (solo pruebas)");
+                      "Native renderer: in the traced frame, for draws with these PS (comma-separated numbers), logs "
+                      "the VS fetches and the bytes of their first vertices and texels (testing only)")
+    .display_name("Trace vertex data for PS (test)");
 // The game measures with an occlusion query how much of the sun is visible (sub_82225438: GetData, Issue(BEGIN),
 // a draw and Issue(END)) and uses it to turn off the flare when trees or terrain cover it. With the faked count of
 // 1000 samples the flare was always drawn in full: sky burned to white and blue or purple halos in the trees.
 REXCVAR_DEFINE_INT32(nfsmw_nativo_oclusion, 1, "NFSMW",
-                     "Renderizador nativo: consultas de oclusion del juego (el destello del sol). 1 = medidas en la GPU, "
-                     "como la Xbox 360; 0 = cuenta fingida de 1000 muestras (lo de antes de la build 146: el destello "
-                     "no se tapa nunca); 2 = cuenta fingida de 0 muestras (solo pruebas: nunca hay destello)")
+                     "Native renderer: the game's occlusion queries (the sun flare). 1 = measured on the GPU, like "
+                     "the Xbox 360; 0 = fake count of 1000 samples (the behavior before build 146: the flare is "
+                     "never hidden); 2 = fake count of 0 samples (testing only: never any flare)")
     .range(0, 2)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Occlusion queries");
 REXCVAR_DEFINE_STRING(nfsmw_nativo_diag_constantes_ps, "", "NFSMW",
-                      "Renderizador nativo (solo pruebas): numeros de PS (separados por comas) de los que se anotan sus "
-                      "12 primeras constantes, como mucho cada nfsmw_nativo_diag_constantes_ms");
+                      "Native renderer (testing only): PS numbers (comma-separated) whose first 12 constants are "
+                      "logged, at most every nfsmw_nativo_diag_constantes_ms")
+    .display_name("Log PS constants (test)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_diag_constantes_ms, 250, "NFSMW",
-                     "Renderizador nativo (solo pruebas): intervalo minimo entre anotaciones de constantes por PS")
-    .range(0, 60000);
+                     "Native renderer (testing only): minimum interval between constant logs per PS")
+    .range(0, 60000)
+    .display_name("PS constants log interval (ms)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_oclusion_alternar_s, 0, "NFSMW",
-                     "Renderizador nativo (solo pruebas): con nfsmw_nativo_oclusion = 1 y N > 0, alterna cada N segundos "
-                     "entre consultas medidas (tramos pares) y la cuenta fingida de 1000 (tramos impares), y anota cada "
-                     "cambio, para comparar el destello del sol en la misma carrera")
+                     "Native renderer (testing only): with nfsmw_nativo_oclusion = 1 and N > 0, alternates every N "
+                     "seconds between measured queries (even stretches) and the fake count of 1000 (odd stretches), "
+                     "and logs each change, to compare the sun flare in the same race")
     .range(0, 600)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Alternate occlusion mode (test, s)");
 REXCVAR_DEFINE_INT32(nfsmw_nativo_oclusion_escala, 0, "NFSMW",
-                     "Renderizador nativo: muestras por pixel con que se cuentan las consultas de oclusion (0 = las del "
-                     "modo de antialiasing que tiene elegido el juego, como en la Xbox 360; 1-16 = fijas, solo pruebas)")
+                     "Native renderer: samples per pixel used to count occlusion queries (0 = those of the "
+                     "antialiasing mode the game has chosen, as on the Xbox 360; 1-16 = fixed, testing only)")
     .range(0, 16)
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Occlusion samples per pixel");
 
 // The 30 FPS guard lives in nfsmw_recorte_sombras.cpp, which owns the switch.
 namespace nfsmw::guardia30 {

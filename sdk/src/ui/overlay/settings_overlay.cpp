@@ -332,16 +332,19 @@ void SettingsDialog::OnDraw(ImGuiIO& /*io*/) {
         continue;
       }
     } else {
-      // Search matches name or description (case-insensitive substring).
+      // Search matches name, display name or description (case-insensitive substring).
       std::string name_lower = entry.name;
+      std::string display_lower = entry.display_name;
       std::string search_lower = search;
       auto to_lower = [](std::string& s) {
         for (auto& c : s)
           c = static_cast<char>(std::tolower(c));
       };
       to_lower(name_lower);
+      to_lower(display_lower);
       to_lower(search_lower);
       if (name_lower.find(search_lower) == std::string::npos &&
+          display_lower.find(search_lower) == std::string::npos &&
           entry.description.find(search_lower) == std::string::npos) {
         continue;
       }
@@ -443,8 +446,9 @@ void SettingsDialog::OnDraw(ImGuiIO& /*io*/) {
       continue;
     } else {
       // Non-keybind CVARs: colored label on left, value widget on right
+      const bool has_display_name = !entry.display_name.empty();
       ImGui::TextColored(LifecycleColor(entry.lifecycle, imgui_drawer()->style().settings), "%-20s",
-                         entry.name.c_str());
+                         has_display_name ? entry.display_name.c_str() : entry.name.c_str());
       if (ImGui::IsItemHovered()) {
         const char* lifecycle_label = "";
         switch (entry.lifecycle) {
@@ -458,7 +462,13 @@ void SettingsDialog::OnDraw(ImGuiIO& /*io*/) {
             lifecycle_label = "Read-only - set at initialization only";
             break;
         }
-        if (!entry.description.empty()) {
+        // With a display name, the tooltip also gives the cvar name used in the config file.
+        if (has_display_name && !entry.description.empty()) {
+          ImGui::SetTooltip("%s\n[%s]\n%s", entry.description.c_str(), lifecycle_label,
+                            entry.name.c_str());
+        } else if (has_display_name) {
+          ImGui::SetTooltip("[%s]\n%s", lifecycle_label, entry.name.c_str());
+        } else if (!entry.description.empty()) {
           ImGui::SetTooltip("%s\n[%s]", entry.description.c_str(), lifecycle_label);
         } else {
           ImGui::SetTooltip("[%s]", lifecycle_label);
@@ -482,10 +492,18 @@ void SettingsDialog::OnDraw(ImGuiIO& /*io*/) {
             break;
           }
         }
-        if (ImGui::BeginCombo("##v", opts[cur_idx].c_str())) {
+        // Shown text: the value's label if it has one, otherwise the raw value.
+        auto label_of = [&entry](const std::string& value) -> const char* {
+          for (const auto& [raw, label] : entry.value_labels) {
+            if (raw == value)
+              return label.c_str();
+          }
+          return value.c_str();
+        };
+        if (ImGui::BeginCombo("##v", label_of(opts[cur_idx]))) {
           for (int i = 0; i < static_cast<int>(opts.size()); ++i) {
             bool sel = (i == cur_idx);
-            if (ImGui::Selectable(opts[i].c_str(), sel)) {
+            if (ImGui::Selectable(label_of(opts[i]), sel)) {
               rex::cvar::SetFlagByName(entry.name, opts[i]);
             }
             if (sel)

@@ -46,8 +46,9 @@
  *     version to recover a profile that got corrupted.
  */
 REXCVAR_DEFINE_STRING(content_backup_root, "", "Kernel",
-                      "Carpeta donde dejar una copia de cada guardado, con una subcarpeta por perfil. "
-                      "Vacia = no se copia nada");
+                      "Folder where a copy of every save is kept, with a subfolder per profile. Empty = nothing is "
+                      "copied")
+    .display_name("Save backup folder");
 
 namespace rex {
 namespace system {

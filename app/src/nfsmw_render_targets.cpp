@@ -76,28 +76,33 @@
 #include <rex/platform.h>
 
 REXCVAR_DEFINE_BOOL(nfsmw_render_sin_mosaico, REX_PLATFORM_SWITCH != 0, "NFSMW",
-                    "Dibujar la escena una sola vez, sin tiling de 3 tiras ni MSAA "
-                    "(evita repetir la escena por tira bajo la emulacion de Xenos)")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Draw the scene a single time, without 3-strip tiling or MSAA (avoids repeating the scene per "
+                    "strip under Xenos emulation)")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Draw scene once (no tiling)");
 // With the mode 4 table made equal to mode 2's, the game stayed in mode 4 with a one-tile scene. With
 // this it really uses its mode 2, the game's own mode without antialiasing (sub_82441990 picks it when
 // lowering quality). It was done on the theory that this mismatch caused the blue edges against the sky,
 // but no: they look the same in both modes and in the emulated renderer; they come from the game's bright
 // pass (see nfsmw_resplandor_cielo).
 REXCVAR_DEFINE_BOOL(nfsmw_render_modo_sin_aa, true, "NFSMW",
-                    "Con nfsmw_render_sin_mosaico: el juego usa de verdad su modo 2 (una tira sin antialiasing) en vez "
-                    "del 3, 4 o 5 con la tabla del 2. No cambia los bordes azules del cielo (eso es "
-                    "nfsmw_resplandor_cielo). false: como antes de la build 148")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "With nfsmw_render_sin_mosaico: the game really uses its mode 2 (one strip without antialiasing) "
+                    "instead of 3, 4 or 5 with mode 2's table. Does not change the blue sky edges (that is "
+                    "nfsmw_resplandor_cielo). false: as before build 148")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Use the game's no-AA mode");
 // Testing only: split the two parts of the hook to see which one causes the blue edges.
 REXCVAR_DEFINE_BOOL(nfsmw_render_prueba_mantener_tiras, false, "NFSMW",
-                    "Solo pruebas: con nfsmw_render_sin_mosaico, no igualar los modos 3-5 al 2 (se quedan sus tiras)")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Testing only: with nfsmw_render_sin_mosaico, do not make modes 3-5 equal to 2 (they keep their "
+                    "strips)")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Keep tiling strips (test)");
 REXCVAR_DEFINE_BOOL(nfsmw_render_prueba_mantener_msaa, false, "NFSMW",
-                    "Solo pruebas: con nfsmw_render_sin_mosaico, no quitar el MSAA ni de los modos ni de los conjuntos")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Testing only: with nfsmw_render_sin_mosaico, do not remove MSAA from the modes or the sets")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Keep MSAA (test)");
 
-// The internal resolution comes from nfsmw_resolucion_interna (Graficos category), and with
+// The internal resolution comes from nfsmw_resolucion_interna (Graphics category), and with
 // "automatico" it follows the dock live: 1920x1080 docked and 1280x720 handheld.
 //
 // How it works without a restart: the game already switches AA mode on the fly (sub_82441990 jumps
@@ -475,7 +480,8 @@ uint32_t MuestrasOriginalesModoActual(const uint8_t* base) {
 // resolved (locked with LockRect) and sub_822234F0 stores the result as the target luminance for
 // brightness adaptation (g_fAdaptedLum). The address, the first bytes and the result are logged.
 REXCVAR_DEFINE_BOOL(nfsmw_diag_luminancia, false, "NFSMW",
-                    "Solo pruebas: anota cada segundo la medida de luminancia del brillo (sub_82223308)");
+                    "Testing only: logs the glow's luminance measurement every second (sub_82223308)")
+    .display_name("Log luminance (test)");
 REX_EXTERN(__imp__sub_82223308);
 REX_HOOK_RAW(sub_82223308) {
   const uint32_t direccion = ctx.r3.u32;

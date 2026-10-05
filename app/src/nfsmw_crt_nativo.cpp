@@ -30,11 +30,13 @@
 #include <rex/logging.h>
 
 REXCVAR_DEFINE_INT32(nfsmw_crt_memset_nativo, 1, "NFSMW",
-                     "memset del CRT del juego (sub_826BE610): 0 = codigo recompilado, 1 = memset del host (la memoria "
-                     "queda igual; por defecto), 2 = validar el nativo contra el recompilado");
+                     "memset of the game's CRT (sub_826BE610): 0 = recompiled code, 1 = host memset (memory ends up "
+                     "the same; default), 2 = validate native against recompiled")
+    .display_name("Native CRT memset");
 REXCVAR_DEFINE_BOOL(nfsmw_crt_diag, false, "NFSMW",
-                    "Diagnostico: cuenta las llamadas y los bytes del memset del juego (sub_826BE610) y anota un "
-                    "resumen cada 10 s");
+                    "Diagnostic: counts the calls and bytes of the game's memset (sub_826BE610) and logs a summary "
+                    "every 10 s")
+    .display_name("CRT memset stats (diag)");
 
 REX_EXTERN(__imp__sub_826BE610);
 

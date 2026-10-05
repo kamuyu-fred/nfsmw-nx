@@ -20,7 +20,7 @@
 
 namespace nfsmw::ajustes {
 
-// Optional post-processing in the Graficos/Posproceso category, like the one in GoldenEye-Recomp (which only
+// Optional post-processing in the Graphics/Post-processing category, like the one in GoldenEye-Recomp (which only
 // exists in D3D12): color grading (temperature, brightness, contrast, tint, saturation, vibrance and gamma),
 // vignette and scanlines. Off by default: the output stays bit-identical. Applied by the output pass of the
 // native renderer.

@@ -54,9 +54,9 @@ REXCVAR_DEFINE_BOOL(host_present_from_non_ui_thread, true, "UI/Presenter",
  * when this was measured, so it never waits for a vblank.
  */
 REXCVAR_DEFINE_BOOL(host_present_ignore_implicit_vsync, true, "UI/Presenter",
-                    "Presentar desde el hilo del juego aunque la superficie tenga vsync implicito "
-                    "(FIFO). Sin esto, con FIFO se pinta en el hilo de la interfaz y el buzon tira "
-                    "la mitad de los fotogramas");
+                    "Present from the game thread even if the surface has implicit vsync (FIFO). Without this, with "
+                    "FIFO the frame is drawn on the UI thread and the mailbox drops half the frames")
+    .display_name("Present from game thread with FIFO");
 
 #if REX_PLATFORM_SWITCH
 // Off by default. See the long comment below: it lowers the mean and blows up the variance, and
@@ -94,44 +94,46 @@ REXCVAR_DEFINE_BOOL(host_present_ignore_implicit_vsync, true, "UI/Presenter",
  * queue (see docs/platform-notes.md, Presentation).
  */
 REXCVAR_DEFINE_BOOL(present_hilo_propio, REX_PRESENT_HILO_PROPIO_DEFAULT, "UI/Presenter",
-                    "Presentar en un hilo propio del presentador en vez de dentro del hilo que "
-                    "genera la imagen. El hilo del juego solo marca que hay imagen nueva y sigue "
-                    "grabando, asi que la GPU no se queda sin trabajo mientras se presenta")
-    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart);
+                    "Present on the presenter's own thread instead of inside the thread that produces the image. The "
+                    "game thread only flags that there is a new image and keeps recording, so the GPU does not run "
+                    "out of work while presenting")
+    .lifecycle(rex::cvar::Lifecycle::kRequiresRestart)
+    .display_name("Dedicated present thread");
 
 /*
  * See RequestPaintFromPaintThread. Discarding threw away half of the frames, and the share of frames
  * over 50 ms went from 8.20 % to 47.52 %. Steady beats fast.
  */
 REXCVAR_DEFINE_BOOL(present_hilo_sin_descartes, true, "UI/Presenter",
-                    "El hilo que genera la imagen espera a que el presentador coja el fotograma "
-                    "anterior en vez de tirarlo. Con el presentador sobrado no espera nunca; si va "
-                    "justo, frena el juego a su ritmo, que es REGULAR. En false se vuelve al "
-                    "comportamiento de la 113: mas FPS nominales y muchisimo mas stuttering");
+                    "The thread that produces the image waits for the presenter to take the previous frame instead "
+                    "of dropping it. With a presenter to spare it never waits; if it is tight, it holds the game to "
+                    "its pace, which is STEADY. false returns to the behavior of build 113: higher nominal FPS and "
+                    "far more stuttering")
+    .display_name("Present thread without drops");
 
 REXCVAR_DEFINE_INT32(present_hilo_espera_max_ms, 50, "UI/Presenter",
-                     "Plazo maximo de esa espera, en ms. Es una red de seguridad por si el "
-                     "presentador se colgara, no un mecanismo: al agotarse se descarta como antes. "
-                     "0 = esperar sin plazo");
+                     "Maximum time for that wait, in ms. It is a safety net in case the presenter hangs, not a "
+                     "mechanism: when it runs out, the frame is dropped as before. 0 = wait with no limit")
+    .display_name("Present wait timeout (ms)");
 
 REXCVAR_DEFINE_INT32(present_hilo_ventana, 600, "UI/Presenter",
-                     "Fotogramas de la ventana con la que se juzga si el hilo de presentacion da "
-                     "abasto. Se mira la espera MEDIA, no las rachas: en la compilacion 115 el juego "
-                     "esperaba el 43 % de los fotogramas pero nunca 90 seguidos, asi que el seguro "
-                     "por rachas no salto y el stuttering subio del 4,93 % al 6,61 %");
+                     "Frames in the window used to judge whether the present thread keeps up. The AVERAGE wait is "
+                     "used, not streaks: in build 115 the game waited on 43 % of frames but never 90 in a row, so "
+                     "the streak-based fallback did not trigger and stuttering rose from 4.93 % to 6.61 %")
+    .display_name("Present thread check window (frames)");
 
 REXCVAR_DEFINE_INT32(present_hilo_espera_media_max_us, 1500, "UI/Presenter",
-                     "Microsegundos que puede costarle de media el presentador al juego, por "
-                     "fotograma, antes de apagar el hilo propio. 1500 = 1,5 ms sobre un fotograma de "
-                     "~38: por encima de eso el hilo propio quita menos de lo que mete. En la 115 "
-                     "iban 5,2 ms de media por fotograma (12,07 ms en el 43 % de ellos)");
+                     "Microseconds the presenter may cost the game on average per frame before the dedicated thread "
+                     "is turned off. 1500 = 1.5 ms over a ~38 ms frame: above that, the dedicated thread costs more "
+                     "than it saves. Build 115 averaged 5.2 ms per frame (12.07 ms on 43 % of them)")
+    .display_name("Present thread max average cost (us)");
 
 
 REXCVAR_DEFINE_INT32(present_hilo_gracia_fotogramas, 3000, "UI/Presenter",
-                     "Fotogramas de gracia antes de que la rendicion pueda dispararse. Durante el "
-                     "arranque y las cargas los tres nucleos estan saturados y el presentador llega "
-                     "tarde por motivos que no se repiten en carrera; en la compilacion 114 se rindio "
-                     "a los 34 segundos por eso y la carrera entera fue por el camino viejo");
+                     "Grace frames before the fallback can trigger. During startup and loading all three cores are "
+                     "saturated and the presenter runs late for reasons that do not recur in races; in build 114 it "
+                     "gave up after 34 seconds because of that and the whole race took the old path")
+    .display_name("Present thread grace period (frames)");
 
 /*
  * Horizon priority of the new thread. 0x2C is REX_SWITCH_PRIO_PRESENT, the band the SDK itself reserves
@@ -147,8 +149,9 @@ REXCVAR_DEFINE_INT32(present_hilo_gracia_fotogramas, 3000, "UI/Presenter",
  *     on fences, not using CPU.
  */
 REXCVAR_DEFINE_INT32(present_hilo_prioridad, 0x2C, "UI/Presenter",
-                     "Prioridad de Horizon del hilo de presentacion (0x1C-0x3B). 0x2C por defecto "
-                     "(REX_SWITCH_PRIO_PRESENT). Sin efecto fuera de la Switch");
+                     "Horizon priority of the present thread (0x1C-0x3B). 0x2C by default (REX_SWITCH_PRIO_PRESENT). "
+                     "No effect outside the Switch")
+    .display_name("Present thread priority");
 
 REXCVAR_DEFINE_BOOL(present_letterbox, true, "UI/Presenter",
                     "Enable letterboxing for non-native aspect ratios");

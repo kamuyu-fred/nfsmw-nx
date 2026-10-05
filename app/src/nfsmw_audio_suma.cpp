@@ -30,8 +30,9 @@
 #include "nfsmw_audio_nativo.h"
 
 REXCVAR_DEFINE_INT32(nfsmw_audio_suma_nativa, 1, "NFSMW",
-                     "Suma con ganancia del motor de sonido (sub_825FDFB0): 0 = codigo recompilado, 1 = nativo (mismo "
-                     "resultado bit a bit; por defecto), 2 = validar el nativo contra el recompilado");
+                     "Gain-scaled sum of the sound engine (sub_825FDFB0): 0 = recompiled code, 1 = native "
+                     "(bit-identical result; default), 2 = validate native against recompiled")
+    .display_name("Native audio gain sum");
 
 REX_EXTERN(__imp__sub_825FDFB0);
 

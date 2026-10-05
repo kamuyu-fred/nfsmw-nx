@@ -87,10 +87,11 @@
 #include <string>
 
 REXCVAR_DEFINE_BOOL(nfsmw_matrices_nativo, true, "NFSMW",
-                    "Matrices por dibujo (sub_824538D0: A x P, A x Q, A x C y la inversa rigida de A) en nativo "
-                    "(build 176), identico bit a bit. Se comprueba contra la original (las primeras 100.000 llamadas "
-                    "de cada camino y despues 1 de cada 4096) y se apaga sola si difiere; false = la original")
-    .lifecycle(rex::cvar::Lifecycle::kInitOnly);
+                    "Per-draw matrices (sub_824538D0: A x P, A x Q, A x C and the rigid inverse of A) in native code "
+                    "(build 176), bit-identical. Checked against the original (the first 100,000 calls of each path, "
+                    "then 1 in 4096) and turns itself off on any difference; false = the original")
+    .lifecycle(rex::cvar::Lifecycle::kInitOnly)
+    .display_name("Native draw matrices");
 
 REX_EXTERN(__imp__sub_824538D0);
 // The writers by their usual name: the hook in nfsmw_material_nativo.cpp (or the original, if there is none).
