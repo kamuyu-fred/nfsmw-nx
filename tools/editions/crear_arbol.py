@@ -129,6 +129,10 @@ def main():
     # the rest of app/ that the build uses
     for rel in ('CMakeLists.txt', 'CMakePresets.json', 'nfsmw.toml', 'orden_funciones.ld', 'overrides.toml',
                 os.path.join('generated', 'rexglue.cmake')):
+        if rel == os.path.join('generated', 'rexglue.cmake') and not os.path.exists(os.path.join(APP, rel)):
+            # app/ was never generated (a tree made from tools/editions/mapa_desde_pgo.py, without the Spanish
+            # executable): the edition's own codegen writes this file
+            continue
         texto = open(os.path.join(APP, rel), encoding='utf-8', newline='').read()
         if rel == 'CMakeLists.txt':
             # PGO profile translated to this edition (tools/editions/pgo/traducir_perfil.py)

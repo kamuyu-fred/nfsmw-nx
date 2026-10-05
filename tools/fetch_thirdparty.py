@@ -50,6 +50,9 @@ def main():
                 if os.path.exists(dst):
                     kept += 1
                     continue
+                if os.path.islink(src) and not os.path.exists(src):
+                    # a symlink to nothing in a submodule (MoltenVK's include/vk_video on macOS): nothing to copy
+                    continue
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copy2(src, dst)
                 copied += 1
