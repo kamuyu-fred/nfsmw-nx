@@ -60,6 +60,9 @@ class SwitchInputDriver final : public InputDriver {
   void Poll(size_t index);
   /* SDK menus on the gamepad: L+R+D-pad. See the .cpp. */
   void DispatchMenuShortcuts(Slot& slot, uint64_t held);
+  /* Tilt steering (input_gyro_volante): the left-stick X the tilt asks for, 0 if it does not apply. */
+  int16_t GyroVolante(Slot& slot);
+  void DetenerSixAxis(Slot& slot);
 
   std::mutex mutex_;
   std::array<std::unique_ptr<Slot>, kSlotCount> slots_;
@@ -69,3 +72,9 @@ class SwitchInputDriver final : public InputDriver {
 };
 
 }  // namespace rex::input::nx
+
+/*
+ * Tilt steering only applies during races, and only the app knows when that is. It calls this every
+ * race frame; the driver treats a race as running while the last call is recent (see the .cpp).
+ */
+extern "C" void RexSwitchGiroscopioEnCarrera(void);

@@ -90,6 +90,18 @@ button to press: **A** accepts and **B** goes back, as in other Switch games.
 To use the face buttons by position instead, as on an Xbox pad (B acts as A, A as B, Y as X and X as Y), set
 `input_xbox_layout = true` in `nfsmw.toml`.
 
+### Tilt steering
+
+You can steer by turning the console like a steering wheel. It works in handheld mode, on the Switch Lite, and with a
+Pro Controller or the right Joy-Con. Turn it on in the Debug Menu (L + R + Right, category **Input**, **Tilt
+steering**) or with `input_gyro_volante = true` in `nfsmw.toml`. It only steers during races: menus are not
+affected, and pushing the left stick overrides the tilt.
+
+- **Tilt for full lock** (`input_gyro_angulo`, 30 by default): degrees of tilt for full steering. Lower is more
+  sensitive.
+- **Tilt deadzone** (`input_gyro_zona_muerta`, 3 by default): degrees around level that drive straight.
+- **Invert tilt** (`input_gyro_invertir`): if it steers the wrong way.
+
 ## Settings
 
 `nfsmw.toml`, next to the NRO, holds the settings and each one is described in the file. Several of them can also be

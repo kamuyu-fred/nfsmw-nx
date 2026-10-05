@@ -10,6 +10,9 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
+#include <cmath>
 #include <cstring>
 #include <string>
 #include <tuple>
@@ -30,6 +33,52 @@
 REXCVAR_DEFINE_BOOL(input_xbox_layout, false, "Input",
                     "Face buttons by position, as on an Xbox pad (the bottom button, B, acts as A). "
                     "false = by letter: A accepts and B goes back");
+
+/*
+ * Tilt steering. Turning the console (or the Pro Controller, or the right Joy-Con) like a steering
+ * wheel moves the left stick sideways, only during races: the app reports them through
+ * RexSwitchGiroscopioEnCarrera. The left stick still works and, once pushed out of a small
+ * deadzone, wins over the tilt. Menus never see the tilt: keystrokes are built from the stick alone.
+ * The tilt comes from gravity in the accelerometer, so it measures the angle from level and does not
+ * drift.
+ */
+REXCVAR_DEFINE_BOOL(input_gyro_volante, false, "Input",
+                    "Tilt steering: turn the console like a steering wheel to steer during races. The left "
+                    "stick still works and overrides the tilt when pushed. Menus are not affected")
+    .display_name("Tilt steering");
+REXCVAR_DEFINE_DOUBLE(input_gyro_angulo, 30.0, "Input",
+                      "Tilt steering: degrees of tilt for full steering lock. Lower is more sensitive")
+    .range(10.0, 60.0)
+    .display_name("Tilt for full lock (deg)");
+REXCVAR_DEFINE_DOUBLE(input_gyro_zona_muerta, 3.0, "Input",
+                      "Tilt steering: degrees around level that do not steer, so holding the console "
+                      "roughly level drives straight")
+    .range(0.0, 10.0)
+    .display_name("Tilt deadzone (deg)");
+REXCVAR_DEFINE_BOOL(input_gyro_invertir, false, "Input",
+                    "Tilt steering: reverse the steering direction")
+    .display_name("Invert tilt");
+REXCVAR_DEFINE_STRING(input_gyro_eje, "x", "Input",
+                      "Tilt steering: the accelerometer axis that lies along the long side of the console. "
+                      "Only change it if turning the console steers wrongly or not at all")
+    .allowed({"x", "y"})
+    .display_name("Tilt axis");
+
+namespace {
+int64_t AhoraMs() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+}
+// The last time the app reported a race frame. The race counts as running while this is recent, so
+// when the app stops reporting (the race ends, a loading screen) the tilt turns itself off.
+std::atomic<int64_t> g_gyro_carrera_ms{0};
+constexpr int64_t kGyroCarreraVigenciaMs = 250;
+}  // namespace
+
+extern "C" void RexSwitchGiroscopioEnCarrera(void) {
+  g_gyro_carrera_ms.store(AhoraMs(), std::memory_order_relaxed);
+}
 
 namespace rex::ui {
 // rex/ui/overlay/debug_overlay.h (not included here because it pulls in ImGui).
@@ -219,6 +268,24 @@ struct SwitchInputDriver::Slot {
   bool vibration_sent = false;
   uint16_t vibration_left = 0;
   uint16_t vibration_right = 0;
+
+  // Left stick X without the tilt, for keystrokes: the tilt must never move a menu.
+  int16_t stick_lx = 0;
+
+  // Six-axis sensor for tilt steering, like the vibration devices: set up for one controller layout
+  // and redone when it changes. Started only while input_gyro_volante is on.
+  HidNpadIdType sixaxis_npad_id = HidNpadIdType_No1;
+  uint32_t sixaxis_style = 0;
+  bool sixaxis_started = false;
+  std::array<HidSixAxisSensorHandle, 2> sixaxis_handles{};
+  int sixaxis_count = 0;
+  int sixaxis_index = 0;  // the handle read: the right Joy-Con of a pair
+  uint64_t sixaxis_sample = 0;
+  // Tilt in degrees, low-pass filtered: the raw accelerometer jitters by a degree or two.
+  float gyro_roll = 0.0f;
+  bool gyro_roll_valid = false;
+  int64_t gyro_roll_ms = 0;
+  int64_t gyro_log_ms = 0;
 };
 
 SwitchInputDriver::SwitchInputDriver(rex::ui::Window* window, size_t window_z_order)
@@ -232,6 +299,9 @@ SwitchInputDriver::~SwitchInputDriver() {
   // rumbling after the process exits.
   std::lock_guard<std::mutex> lock(mutex_);
   for (auto& slot : slots_) {
+    if (slot) {
+      DetenerSixAxis(*slot);
+    }
     if (slot && slot->vibration_count) {
       std::array<HidVibrationValue, 2> stop{};
       for (auto& value : stop) {
@@ -287,6 +357,7 @@ void SwitchInputDriver::Poll(size_t index) {
       slot.vibration_count = 0;
     } else {
       slot.id = DeviceId::kInvalid;
+      DetenerSixAxis(slot);
     }
   }
   if (!connected) {
@@ -316,10 +387,18 @@ void SwitchInputDriver::Poll(size_t index) {
   // HID reports up as positive Y, like XInput, so no inversion is needed.
   const HidAnalogStickState left = padGetStickPos(&slot.pad, 0);
   const HidAnalogStickState right = padGetStickPos(&slot.pad, 1);
-  gamepad.thumb_lx = ClampStickAxis(left.x);
+  const int16_t stick_lx = ClampStickAxis(left.x);
+  slot.stick_lx = stick_lx;
+  gamepad.thumb_lx = stick_lx;
   gamepad.thumb_ly = ClampStickAxis(left.y);
   gamepad.thumb_rx = ClampStickAxis(right.x);
   gamepad.thumb_ry = ClampStickAxis(right.y);
+  // Tilt steering: it drives the left stick X while the stick itself rests in a small deadzone.
+  constexpr int16_t kStickGanaAlGiro = 0x2000;
+  const int16_t giro = GyroVolante(slot);
+  if (giro != 0 && std::abs(int(stick_lx)) < kStickGanaAlGiro) {
+    gamepad.thumb_lx = giro;
+  }
   /*
    * With the debug overlay open, L+R and the right stick move it (debug_overlay.cpp,
    * on the UI thread). While L and R are held, the game sees neither those two
@@ -340,6 +419,135 @@ void SwitchInputDriver::Poll(size_t index) {
   }
 }
 
+void SwitchInputDriver::DetenerSixAxis(Slot& slot) {
+  if (slot.sixaxis_started) {
+    for (int i = 0; i < slot.sixaxis_count; ++i) {
+      hidStopSixAxisSensor(slot.sixaxis_handles[i]);
+    }
+  }
+  slot.sixaxis_started = false;
+  slot.sixaxis_style = 0;
+  slot.sixaxis_count = 0;
+  slot.gyro_roll_valid = false;
+}
+
+/*
+ * Tilt steering. The tilt is the angle between the long side of the controller and the horizon,
+ * from gravity in the accelerometer: atan2(long axis, length of the other two). That angle does not
+ * depend on how far the console is tipped back toward the player, and it cannot drift.
+ */
+int16_t SwitchInputDriver::GyroVolante(Slot& slot) {
+  const bool activo = REXCVAR_GET(input_gyro_volante);
+
+  // The sensor that goes with this slot's current layout (none while the option is off).
+  HidNpadIdType npad_id = slot.npad_id;
+  uint32_t style = 0;
+  int count = 0;
+  int index = 0;
+  if (activo) {
+    if (slot.npad_id == HidNpadIdType_No1 && slot.pad.active_handheld) {
+      npad_id = HidNpadIdType_Handheld;
+      style = HidNpadStyleTag_NpadHandheld;
+      count = 1;
+    } else {
+      const uint32_t attached = hidGetNpadStyleSet(npad_id);
+      if (attached & HidNpadStyleTag_NpadFullKey) {
+        style = HidNpadStyleTag_NpadFullKey;
+        count = 1;
+      } else if (attached & HidNpadStyleTag_NpadJoyDual) {
+        style = HidNpadStyleTag_NpadJoyDual;
+        count = 2;
+        index = 1;  // the right Joy-Con, the one in the right hand
+      } else if (attached & HidNpadStyleTag_NpadJoyLeft) {
+        style = HidNpadStyleTag_NpadJoyLeft;
+        count = 1;
+      } else if (attached & HidNpadStyleTag_NpadJoyRight) {
+        style = HidNpadStyleTag_NpadJoyRight;
+        count = 1;
+      }
+    }
+  }
+
+  if (style != slot.sixaxis_style || (style && npad_id != slot.sixaxis_npad_id)) {
+    DetenerSixAxis(slot);
+    if (style) {
+      Result rc = hidGetSixAxisSensorHandles(slot.sixaxis_handles.data(), count, npad_id,
+                                             static_cast<HidNpadStyleTag>(style));
+      int iniciados = 0;
+      for (; R_SUCCEEDED(rc) && iniciados < count; ++iniciados) {
+        rc = hidStartSixAxisSensor(slot.sixaxis_handles[iniciados]);
+        if (R_FAILED(rc)) {
+          break;
+        }
+      }
+      if (R_FAILED(rc)) {
+        for (int i = 0; i < iniciados; ++i) {
+          hidStopSixAxisSensor(slot.sixaxis_handles[i]);
+        }
+      }
+      // Remembered even if it failed, so a failing controller is not retried on every poll.
+      slot.sixaxis_npad_id = npad_id;
+      slot.sixaxis_style = style;
+      slot.sixaxis_count = R_SUCCEEDED(rc) ? count : 0;
+      slot.sixaxis_index = index;
+      slot.sixaxis_started = R_SUCCEEDED(rc);
+      if (slot.sixaxis_started) {
+        REXLOG_INFO("[giroscopio] sensor iniciado: npad {} estilo 0x{:X}, {} handle(s)", int(npad_id),
+                    style, count);
+      } else {
+        REXLOG_WARN("[giroscopio] no se pudo iniciar el sensor (npad {} estilo 0x{:X}): 0x{:08X}",
+                    int(npad_id), style, rc);
+      }
+    }
+  }
+
+  const int64_t ahora = AhoraMs();
+  const bool en_carrera =
+      ahora - g_gyro_carrera_ms.load(std::memory_order_relaxed) < kGyroCarreraVigenciaMs;
+  if (!slot.sixaxis_started || !en_carrera) {
+    slot.gyro_roll_valid = false;
+    return 0;
+  }
+
+  HidSixAxisSensorState estado{};
+  if (hidGetSixAxisSensorStates(slot.sixaxis_handles[slot.sixaxis_index], &estado, 1) == 0) {
+    return 0;
+  }
+  const HidVector& a = estado.acceleration;
+  const bool eje_y = REXCVAR_GET(input_gyro_eje) == "y";
+  const float largo = eje_y ? a.y : a.x;
+  const float resto = eje_y ? std::sqrt(a.x * a.x + a.z * a.z) : std::sqrt(a.y * a.y + a.z * a.z);
+  const float roll = std::atan2(largo, resto) * (180.0f / 3.14159265f);
+
+  // Low-pass with a 60 ms time constant, updated once per new sensor sample: Poll runs at the
+  // game's pace, which is not fixed.
+  if (!slot.gyro_roll_valid) {
+    slot.gyro_roll = roll;
+    slot.gyro_roll_valid = true;
+    slot.gyro_roll_ms = ahora;
+    slot.sixaxis_sample = estado.sampling_number;
+  } else if (estado.sampling_number != slot.sixaxis_sample) {
+    const float dt = float(std::clamp<int64_t>(ahora - slot.gyro_roll_ms, 1, 100)) / 1000.0f;
+    const float alfa = 1.0f - std::exp(-dt / 0.060f);
+    slot.gyro_roll += alfa * (roll - slot.gyro_roll);
+    slot.gyro_roll_ms = ahora;
+    slot.sixaxis_sample = estado.sampling_number;
+  }
+
+  float grados = REXCVAR_GET(input_gyro_invertir) ? -slot.gyro_roll : slot.gyro_roll;
+  const float zona = float(REXCVAR_GET(input_gyro_zona_muerta));
+  const float tope = std::max(float(REXCVAR_GET(input_gyro_angulo)), zona + 1.0f);
+  const float magnitud = std::clamp((std::abs(grados) - zona) / (tope - zona), 0.0f, 1.0f);
+  const int16_t salida = int16_t(std::copysign(magnitud, grados) * 32767.0f);
+
+  // One line every 10 s of race, to check the axis and the sign on the console.
+  if (ahora - slot.gyro_log_ms >= 10000) {
+    slot.gyro_log_ms = ahora;
+    REXLOG_INFO("[giroscopio] aceleracion ({:.2f}, {:.2f}, {:.2f}) G, inclinacion {:.1f} grados, stick {}",
+                a.x, a.y, a.z, slot.gyro_roll, salida);
+  }
+  return salida;
+}
 
 /* From the profiler (switch_perf.cpp): turns the GPU A/B test lap on and off. */
 extern "C" void RexSwitchPerfToggleAb(void);
@@ -603,9 +811,12 @@ X_RESULT SwitchInputDriver::GetDeviceKeystroke(DeviceId id, uint32_t flags,
   // "unpressed". The algorithm will automatically send UP events when
   // 'is_active()' goes low and DOWN events when it goes high again.
   const bool is_active = this->is_active();
+  // Keystrokes come from the stick without the tilt (Slot::stick_lx), so tilting never moves a menu.
+  X_INPUT_GAMEPAD sin_giro = slot->state.gamepad;
+  sin_giro.thumb_lx = slot->stick_lx;
   const uint64_t curr_butts =
       is_active ? (static_cast<uint64_t>(static_cast<uint16_t>(slot->state.gamepad.buttons)) |
-                   AnalogToKeyfield(slot->state.gamepad))
+                   AnalogToKeyfield(sin_giro))
                 : uint64_t(0);
 
   // Handle repeating

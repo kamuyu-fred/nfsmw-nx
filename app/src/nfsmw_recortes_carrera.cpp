@@ -870,6 +870,11 @@ void DecidirReflejo(uint8_t* base) {
 }  // namespace
 }  // namespace nfsmw::recortes_carrera
 
+#if REX_PLATFORM_SWITCH
+// Tilt steering (input_gyro_volante in the SDK's Switch input driver) only applies during races.
+extern "C" void RexSwitchGiroscopioEnCarrera(void);
+#endif
+
 REX_EXTERN(__imp__sub_8243FF30);
 REX_HOOK_RAW(sub_8243FF30) {
   __imp__sub_8243FF30(ctx, base);
@@ -878,6 +883,9 @@ REX_HOOK_RAW(sub_8243FF30) {
   if (!EnCarrera(base)) {
     return;
   }
+#if REX_PLATFORM_SWITCH
+  RexSwitchGiroscopioEnCarrera();
+#endif
   if (REXCVAR_GET(nfsmw_reflejo_carretera)) {
     AjustarDetalleReflejo(base);
     if (REXCVAR_GET(nfsmw_reflejo_bajo_demanda)) {
